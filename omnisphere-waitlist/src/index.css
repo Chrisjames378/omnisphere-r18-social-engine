@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #ff007f;
+  --color-brand-secondary: #8a2be2;
+  --color-brand-accent: #00f0ff;
+  --color-brand-matrix: #00ff66;
+  --color-dark-bg: #09090b;
+  --color-dark-card: #18181b;
+  --color-dark-border: #27272a;
+  --color-dark-hover: #2d2d30;
+  --color-glow-pink: rgba(255, 0, 127, 0.45);
+  --color-glow-purple: rgba(138, 43, 226, 0.45);
+  --color-glow-cyan: rgba(0, 240, 255, 0.45);
+  --color-glow-matrix: rgba(0, 255, 102, 0.45);
+
+  --font-cyber: "Outfit", sans-serif;
+  --font-sans: "Inter", sans-serif;
+
+  --animate-scanline: scanline 3s linear infinite;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
+
+  @keyframes scanline {
+    0% {
+      top: 0%;
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      top: 100%;
+      opacity: 0.3;
+    }
+  }
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 15px var(--color-glow-pink);
+    }
+    50% {
+      box-shadow: 0 0 30px var(--color-glow-pink), 0 0 10px var(--color-brand-secondary);
+    }
+  }
+}
+
+/* Base resets & layouts */
+body {
+  background-color: var(--color-dark-bg);
+  color: var(--color-dark-text);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  margin: 0;
+}
+
+/* Custom Premium Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-dark-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-secondary);
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(24, 24, 27, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-fuchsia {
+  background: rgba(255, 0, 127, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 0, 127, 0.15);
+}
+
+.glass-panel-purple {
+  background: rgba(138, 43, 226, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(138, 43, 226, 0.15);
+}
+
+.glass-panel-matrix {
+  background: rgba(0, 255, 102, 0.02);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 255, 102, 0.15);
+}
+
+/* Hide default Vite layout styles */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+/* Cyber text effects */
+.text-neon-pink {
+  color: var(--color-brand-primary);
+  text-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+}
+
+.text-neon-purple {
+  color: var(--color-brand-secondary);
+  text-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+}
+
+.text-neon-cyan {
+  color: var(--color-brand-accent);
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.text-neon-matrix {
+  color: var(--color-brand-matrix);
+  text-shadow: 0 0 10px rgba(0, 255, 102, 0.5);
+}
