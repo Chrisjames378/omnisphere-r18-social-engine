@@ -17,7 +17,6 @@ import {
   CheckCircle,
   Sparkles,
   LockKeyhole,
-  User,
   Coins,
   Flame,
   ShieldCheck,
@@ -197,12 +196,197 @@ const INITIAL_MESSAGES: Message[] = [
   }
 ];
 
+function BiometricScannerCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animationId: number;
+    let width = canvas.width = 180;
+    let height = canvas.height = 180;
+
+    const particles: { x: number; y: number; vx: number; vy: number }[] = [];
+    for (let i = 0; i < 20; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 1.2,
+        vy: (Math.random() - 0.5) * 1.2,
+      });
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.strokeStyle = "rgba(0, 240, 255, 0.25)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(width / 2, height / 2, 55, 75, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(width / 2 - 8, height / 2);
+      ctx.lineTo(width / 2 + 8, height / 2);
+      ctx.moveTo(width / 2, height / 2 - 8);
+      ctx.lineTo(width / 2, height / 2 + 8);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255, 0, 127, 0.75)";
+      ctx.strokeStyle = "rgba(0, 240, 255, 0.15)";
+      particles.forEach((p, idx) => {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > width) p.vx *= -1;
+        if (p.y < 0 || p.y > height) p.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        for (let j = idx + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+          if (dist < 40) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+      });
+
+      ctx.fillStyle = "#00f0ff";
+      ctx.font = "8px monospace";
+      ctx.fillText("[MAPPING FACIAL NODES]", 12, 20);
+      ctx.fillText(`[CONFIDENCE: ${(98.1 + Math.random() * 1.4).toFixed(1)}%]`, 12, height - 12);
+
+      animationId = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => cancelAnimationFrame(animationId);
+  }, []);
+
+  return <canvas ref={canvasRef} className="w-full h-full object-cover rounded-full" />;
+}
+
 export default function App() {
   // Navigation & View States
   const [activeTab, setActiveTab] = useState<"feed" | "messages" | "studio" | "wallet" | "waitlist" | "agent">("feed");
   const [isAgeVerified, setIsAgeVerified] = useState<boolean>(() => {
     return localStorage.getItem("omni_verified") === "true";
   });
+
+  // Melody Synth Teaser & Visualizer States
+  const [isPlayingSynth, setIsPlayingSynth] = useState(false);
+  const [visualizerBars, setVisualizerBars] = useState<number[]>(Array(24).fill(15));
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const activeOscillatorsRef = useRef<any[]>([]);
+
+  const stopSynth = () => {
+    setIsPlayingSynth(false);
+    activeOscillatorsRef.current.forEach(osc => {
+      try { osc.stop(); } catch (e) {}
+    });
+    activeOscillatorsRef.current = [];
+    setVisualizerBars(Array(24).fill(15));
+    if (audioCtxRef.current) {
+      try { audioCtxRef.current.close(); } catch(e){}
+      audioCtxRef.current = null;
+    }
+  };
+
+  const handlePlaySynth = () => {
+    if (isPlayingSynth) {
+      stopSynth();
+      return;
+    }
+    
+    setIsPlayingSynth(true);
+    
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioContextClass();
+      audioCtxRef.current = ctx;
+      
+      const now = ctx.currentTime;
+      
+      const melody = [
+        { note: 130.81, time: 0.0 }, // C3
+        { note: 261.63, time: 0.2 }, // C4
+        { note: 196.00, time: 0.4 }, // G3
+        { note: 392.00, time: 0.6 }, // G4
+        { note: 155.56, time: 0.8 }, // Eb3
+        { note: 311.13, time: 1.0 }, // Eb4
+        { note: 233.08, time: 1.2 }, // Bb3
+        { note: 466.16, time: 1.4 }, // Bb4
+        
+        { note: 130.81, time: 1.6 }, // C3
+        { note: 261.63, time: 1.8 }, // C4
+        { note: 196.00, time: 2.0 }, // G3
+        { note: 392.00, time: 2.2 }, // G4
+        { note: 155.56, time: 2.4 }, // Eb3
+        { note: 311.13, time: 2.6 }, // Eb4
+        { note: 233.08, time: 2.8 }, // Bb3
+        { note: 466.16, time: 3.0 }  // Bb4
+      ];
+      
+      const duration = 0.18;
+      
+      melody.forEach((item) => {
+        const osc = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+        const gainNode = ctx.createGain();
+        
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(item.note, now + item.time);
+        
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(900, now + item.time);
+        filter.frequency.exponentialRampToValueAtTime(150, now + item.time + duration);
+        
+        gainNode.gain.setValueAtTime(0.0, now + item.time);
+        gainNode.gain.linearRampToValueAtTime(0.12, now + item.time + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + item.time + duration);
+        
+        osc.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        
+        osc.start(now + item.time);
+        osc.stop(now + item.time + duration);
+        
+        activeOscillatorsRef.current.push(osc);
+        
+        setTimeout(() => {
+          if (ctx.state === "closed") return;
+          setVisualizerBars(prev => prev.map(() => Math.floor(20 + Math.random() * 80)));
+        }, item.time * 1000);
+      });
+      
+      setTimeout(() => {
+        stopSynth();
+      }, 3300);
+      
+    } catch (err) {
+      console.error("Audio Context failed:", err);
+      setIsPlayingSynth(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      activeOscillatorsRef.current.forEach(osc => {
+        try { osc.stop(); } catch(e){}
+      });
+    };
+  }, []);
+
   const [verificationStep, setVerificationStep] = useState<"none" | "scanning" | "completed">("none");
   const [scanProgress, setScanProgress] = useState<number>(0);
 
@@ -827,20 +1011,45 @@ export default function App() {
     setChatInput("");
 
     setTimeout(async () => {
-      const responses = [
-        "That's super interesting! I'm planning to release my next raw file tomorrow.",
-        "Thanks for supporting me! Make sure you check out my latest premium content on the feed.",
-        "A lot of other sites shadowban my posts, so I'm glad we can chat freely here without filters.",
-        "Let me know what you think about my synth loops. I appreciate honest feedback!",
-        "Yes, absolutely. Uncensored distribution makes all the difference."
-      ];
-      const randomReply = responses[Math.floor(Math.random() * responses.length)];
+      const creator = profiles.find(p => p.id === activeChatUser);
+      if (!creator) return;
+
+      let replyText = "";
+      const textLower = chatInput.toLowerCase();
+
+      if (creator.username === "cyber_vixen") {
+        if (textLower.includes("synth") || textLower.includes("music") || textLower.includes("song") || textLower.includes("loop") || textLower.includes("melody")) {
+          replyText = "Awesome! That C3 arpeggiator haptic loop is actually part of my upcoming track 'Midnight Static'. Check out the teaser player in the feed, you can play it live!";
+        } else if (textLower.includes("sub") || textLower.includes("price") || textLower.includes("pricing") || textLower.includes("unlock")) {
+          replyText = "Thanks for the support! Subscribing to my channel unlocks the full 8K master album downloads and all raw synth stems.";
+        } else if (textLower.includes("hello") || textLower.includes("hi ") || textLower.includes("hey")) {
+          replyText = "Hey! Glad you're here. Let me know what you think of my studio logs. I'm cooking up some new arps tonight.";
+        } else {
+          replyText = "A lot of other sites shadowban my posts, so I'm glad we can chat freely here without filters. Let me know what you think about my synth loops!";
+        }
+      } else if (creator.username === "pixel_ghost") {
+        if (textLower.includes("commission") || textLower.includes("3d") || textLower.includes("art") || textLower.includes("render") || textLower.includes("mesh")) {
+          replyText = "Yes! I am open for custom 3D commissions. Standard rates start at 100 tokens ($100) per mesh. Let me know your concept!";
+        } else if (textLower.includes("hello") || textLower.includes("hi ") || textLower.includes("hey")) {
+          replyText = "Stay virtual! Pushing my latest Blender shader preview to the feed shortly. Sub to grab the raw source files.";
+        } else {
+          replyText = "Yes, absolutely. Uncensored distribution makes all the difference for digital artists. Let me know what custom 3D model you need for commission!";
+        }
+      } else if (creator.username === "shadow_scribe") {
+        if (textLower.includes("document") || textLower.includes("leak") || textLower.includes("file") || textLower.includes("pdf")) {
+          replyText = "The complete PDF dossier is fully unlocked for my subscribers. It exposes the metadata brokerage transaction chains in detail.";
+        } else {
+          replyText = "Uncensored distribution is vital. Ad-free, tracking-free journalism is the only way to expose telemetry brokers. Next document dump is coming shortly.";
+        }
+      } else {
+        replyText = "Zero-telemetry handshake active. We are completely off the grid here. Let me know what you think!";
+      }
 
       const replyMsg: Message = {
         id: `msg-reply-${Date.now()}`,
         sender_id: activeChatUser,
         receiver_id: "currentUser",
-        content: randomReply,
+        content: replyText,
         created_at: new Date().toISOString()
       };
 
@@ -850,7 +1059,7 @@ export default function App() {
           await client.from("messages").insert({
             sender_id: activeChatUser,
             receiver_id: "currentUser",
-            content: randomReply
+            content: replyText
           });
         }
       } else {
@@ -982,9 +1191,8 @@ export default function App() {
 
             {verificationStep === "scanning" && (
               <div className="w-full flex flex-col items-center">
-                {/* Simulated Face Scan Border */}
-                <div className="relative w-48 h-48 rounded-full border-4 border-dashed border-brand-accent/50 flex items-center justify-center overflow-hidden mb-6 p-1 bg-zinc-900/60 shadow-[0_0_20px_rgba(0,240,255,0.1)]">
-                  <User className="w-24 h-24 text-zinc-600 animate-pulse" />
+                <div className="relative w-48 h-48 rounded-full border-4 border-dashed border-brand-accent/50 flex items-center justify-center overflow-hidden mb-6 bg-zinc-900/60 shadow-[0_0_20px_rgba(0,240,255,0.1)]">
+                  <BiometricScannerCanvas />
                   
                   {/* Scanline Overlay */}
                   <div className="absolute left-0 right-0 h-1 bg-brand-accent/80 shadow-[0_0_8px_var(--color-glow-cyan)] animate-scanline"></div>
@@ -1417,6 +1625,44 @@ export default function App() {
                                 alt="Post attachment"
                                 className="w-full max-h-[480px] object-cover hover:scale-[1.01] transition-transform duration-500"
                               />
+                            </div>
+                          )}
+
+                          {post.id === "post-1" && (
+                            <div className="mx-5 mb-4 p-4 rounded-xl bg-zinc-950 border border-brand-primary/20 flex flex-col gap-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    onClick={handlePlaySynth}
+                                    className={`w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-all ${
+                                      isPlayingSynth 
+                                        ? "bg-brand-primary shadow-[0_0_12px_rgba(255,0,127,0.4)] animate-pulse" 
+                                        : "bg-zinc-800 text-white hover:bg-brand-primary"
+                                    }`}
+                                  >
+                                    {isPlayingSynth ? (
+                                      <span className="text-xs font-sans">■</span>
+                                    ) : (
+                                      <span className="text-xs font-sans pl-0.5">▶</span>
+                                    )}
+                                  </button>
+                                  <div>
+                                    <span className="text-xs font-cyber font-bold text-white block">Teaser Jams: Midnight Static</span>
+                                    <span className="text-[9px] text-brand-primary uppercase tracking-wider font-semibold">Synthesizer haptic loops</span>
+                                  </div>
+                                </div>
+                                <span className="font-mono text-xs text-dark-muted">0:12</span>
+                              </div>
+                              
+                              <div className="flex items-end gap-1 h-6 px-2">
+                                {visualizerBars.map((val, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="flex-1 bg-gradient-to-t from-brand-primary via-brand-secondary to-brand-accent rounded-t transition-all duration-150"
+                                    style={{ height: `${val}%` }}
+                                  ></div>
+                                ))}
+                              </div>
                             </div>
                           )}
                         </>
