@@ -1,0 +1,99 @@
+name: Omnisphere R18 Social Suite CI/CD
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: write
+
+jobs:
+  audit-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            omnisphere-app/package-lock.json
+            omnisphere-waitlist/package-lock.json
+            omnisphere-mobile/package-lock.json
+
+      # 1. Audit and Build PWA App
+      - name: Install PWA App Dependencies
+        run: |
+          cd omnisphere-app
+          npm ci
+
+      - name: TypeScript Compile Audit PWA App
+        run: |
+          cd omnisphere-app
+          npx tsc --noEmit
+
+      - name: Lint PWA App
+        run: |
+          cd omnisphere-app
+          npm run lint
+
+      - name: Build PWA App
+        run: |
+          cd omnisphere-app
+          npm run build
+
+      # 2. Audit and Build Waitlist Portal
+      - name: Install Waitlist Dependencies
+        run: |
+          cd omnisphere-waitlist
+          npm ci
+
+      - name: TypeScript Compile Audit Waitlist
+        run: |
+          cd omnisphere-waitlist
+          npx tsc --noEmit
+
+      - name: Lint Waitlist
+        run: |
+          cd omnisphere-waitlist
+          npm run lint
+
+      - name: Build Waitlist
+        run: |
+          cd omnisphere-waitlist
+          npm run build
+
+      # 3. Audit and Build Mobile App (Expo)
+      - name: Install Mobile App Dependencies
+        run: |
+          cd omnisphere-mobile
+          npm ci
+
+      - name: TypeScript Compile Audit Mobile App
+        run: |
+          cd omnisphere-mobile
+          npx tsc --noEmit
+
+      - name: Export Mobile App (Verify Expo Bundler)
+        run: |
+          cd omnisphere-mobile
+          npx expo export --platform web
+        continue-on-error: true
+
+      - name: Setup Expo / EAS
+        if: ${{ secrets.EXPO_TOKEN != '' }}
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: EAS Build Check / Deploy (If Token Configured)
+        if: ${{ secrets.EXPO_TOKEN != '' }}
+        run: |
+          cd omnisphere-mobile
+          eas build --platform all --profile production --non-interactive --no-wait

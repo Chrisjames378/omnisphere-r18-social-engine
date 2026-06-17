@@ -75,7 +75,7 @@ class SupabaseQueryBuilder {
   async execute() {
     try {
       let fetchUrl = this.getRequestUrl();
-      let options: RequestInit = {
+      const options: RequestInit = {
         method: this.method,
         headers: this.getHeaders()
       };

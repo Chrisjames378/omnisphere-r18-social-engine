@@ -39,6 +39,13 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  // Viral referral queue states
+  const [referredCount, setReferredCount] = useState(1);
+  const [queuePosition, setQueuePosition] = useState(1248);
+  const [sharedOnX, setSharedOnX] = useState(false);
+  const [joinedDiscord, setJoinedDiscord] = useState(false);
+  const [registeredHandle, setRegisteredHandle] = useState("");
+
   // Handle Availability states
   const [handleStatus, setHandleStatus] = useState<"idle" | "checking" | "taken" | "available">("idle");
   const [checkedHandleText, setCheckedHandleText] = useState("");
@@ -172,11 +179,11 @@ export default function App() {
       setEntries(prev => [newEntry, ...prev]);
     }
 
+    setRegisteredHandle(sanitizedHandle);
     setEmail("");
     setHandle("");
     setIsSubmitting(false);
     setSubmitSuccess(true);
-    setTimeout(() => setSubmitSuccess(false), 5000);
   };
 
   // Niche DM Pitch Copy helper
@@ -314,10 +321,132 @@ export default function App() {
           {/* Checkout Availability Input / Form */}
           <div className="max-w-md mx-auto bg-dark-card border border-dark-border p-6 rounded-2xl space-y-5 text-left">
             {submitSuccess ? (
-              <div className="py-8 text-center flex flex-col items-center gap-3 text-brand-matrix">
-                <CheckCircle className="w-12 h-12" />
-                <h4 className="font-bold text-white">Spot Secured Successfully</h4>
-                <p className="text-xs text-dark-muted">We have logged your handle reservation in our verified syndicate registry.</p>
+              <div className="py-4 space-y-6 text-center animate-fade-in">
+                <div className="flex flex-col items-center gap-2 text-brand-matrix">
+                  <CheckCircle className="w-12 h-12 text-brand-matrix drop-shadow-[0_0_10px_rgba(0,255,102,0.4)]" />
+                  <h4 className="font-cyber font-bold text-white text-lg tracking-wide uppercase">Spot Secured!</h4>
+                  <p className="text-xs text-dark-muted font-mono bg-dark-bg px-3 py-1 rounded-full border border-dark-border">
+                    Handle: @{registeredHandle}
+                  </p>
+                </div>
+
+                {/* Queue Position Card */}
+                <div className="p-4 rounded-xl bg-zinc-950 border border-brand-accent/20 text-center space-y-1">
+                  <span className="text-[10px] text-dark-muted uppercase font-bold tracking-widest block">Current Queue Position</span>
+                  <h3 className="text-3xl font-mono font-black text-brand-accent drop-shadow-[0_0_12px_rgba(0,242,254,0.3)]">
+                    #{queuePosition}
+                  </h3>
+                  <p className="text-[10px] text-zinc-500">
+                    Jump ahead of others by completing launch tasks below.
+                  </p>
+                </div>
+
+                {/* Referral Link Box */}
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-dark-muted uppercase">Your Creator Syndicate Invite Link</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`https://omnisphere.app/join?ref=${registeredHandle}`}
+                      className="flex-1 px-3 py-2 rounded-lg bg-dark-bg border border-dark-border text-xs text-zinc-400 font-mono focus:outline-none"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://omnisphere.app/join?ref=${registeredHandle}`);
+                        alert("Referral link copied!");
+                      }}
+                      className="px-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-xs hover:bg-zinc-700 cursor-pointer"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </div>
+
+                {/* Checklist to Jump Queue */}
+                <div className="space-y-3 text-left border-t border-dark-border/40 pt-4">
+                  <h5 className="text-[10px] font-cyber font-bold text-white uppercase tracking-wider">🚀 Jump the Queue Checklist</h5>
+                  
+                  {/* Task 1: Share on X */}
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-dark-bg/60 border border-dark-border">
+                    <div className="flex-1 pr-2">
+                      <h6 className="text-xs font-semibold text-white">Broadcast on X / Twitter</h6>
+                      <p className="text-[10px] text-dark-muted mt-0.5">Tweet your handle to jump 200 spots</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (!sharedOnX) {
+                          setSharedOnX(true);
+                          setQueuePosition(prev => Math.max(1, prev - 200));
+                          const tweetText = encodeURIComponent(`Just secured my censor-free handle @${registeredHandle} on Omnisphere — the decentralized mature social engine with 95% creator splits. Reserve yours: https://omnisphere.app/join?ref=${registeredHandle} @OmnisphereR18`);
+                          window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
+                        }
+                      }}
+                      disabled={sharedOnX}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                        sharedOnX
+                          ? "bg-brand-matrix/10 border border-brand-matrix text-brand-matrix"
+                          : "bg-brand-primary text-white hover:bg-brand-primary/80"
+                      }`}
+                    >
+                      {sharedOnX ? "COMPLETED" : "SHARE ON X"}
+                    </button>
+                  </div>
+
+                  {/* Task 2: Discord Syndicate */}
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-dark-bg/60 border border-dark-border">
+                    <div className="flex-1 pr-2">
+                      <h6 className="text-xs font-semibold text-white">Join Discord Syndicate</h6>
+                      <p className="text-[10px] text-dark-muted mt-0.5">Connect to developer nodes to jump 150 spots</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (!joinedDiscord) {
+                          setJoinedDiscord(true);
+                          setQueuePosition(prev => Math.max(1, prev - 150));
+                          alert("Welcome to the decentralized node syndicate!");
+                        }
+                      }}
+                      disabled={joinedDiscord}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                        joinedDiscord
+                          ? "bg-brand-matrix/10 border border-brand-matrix text-brand-matrix"
+                          : "bg-brand-secondary text-white hover:bg-brand-secondary/80"
+                      }`}
+                    >
+                      {joinedDiscord ? "COMPLETED" : "JOIN DISCORD"}
+                    </button>
+                  </div>
+
+                  {/* Task 3: Referral Progress */}
+                  <div className="p-2.5 rounded-lg bg-dark-bg/60 border border-dark-border space-y-2">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h6 className="text-xs font-semibold text-white">Invite 3 Creator Friends</h6>
+                        <p className="text-[10px] text-dark-muted mt-0.5">Jump 300 spots per referral</p>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-brand-accent">{referredCount}/3 Joined</span>
+                    </div>
+                    {/* Progress Bar */}
+                    <div className="h-1.5 w-full bg-zinc-950 rounded-full overflow-hidden border border-zinc-800">
+                      <div
+                        className="h-full bg-brand-accent shadow-[0_0_8px_rgba(0,242,254,0.5)] transition-all duration-300"
+                        style={{ width: `${(referredCount / 3) * 100}%` }}
+                      />
+                    </div>
+                    {referredCount < 3 && (
+                      <button
+                        onClick={() => {
+                          setReferredCount(prev => prev + 1);
+                          setQueuePosition(prev => Math.max(1, prev - 300));
+                        }}
+                        className="w-full mt-1.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-white rounded text-[10px] font-bold cursor-pointer"
+                      >
+                        [DEMO] Simulate referral joining
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">

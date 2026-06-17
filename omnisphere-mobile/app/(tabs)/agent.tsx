@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   SafeAreaView
 } from "react-native";
-import { UserCheck, ShieldCheck, Sparkles, Send } from "lucide-react-native";
+import { UserCheck, ShieldCheck, Sparkles, Send, Key } from "lucide-react-native";
 
 export default function AgentScreen() {
   const [logs, setLogs] = useState<string[]>([
@@ -20,16 +20,19 @@ export default function AgentScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [score, setScore] = useState<number | null>(null);
+  const [apiKey, setApiKey] = useState("");
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim() || isGenerating) return;
 
-    setLogs(prev => [...prev, `> ${input}`]);
-    const query = input.toLowerCase();
+    const userText = input;
+    setLogs(prev => [...prev, `> ${userText}`]);
     setInput("");
     setIsGenerating(true);
 
-    setTimeout(() => {
+    const triggerOfflineReply = (txt: string) => {
+      const query = txt.toLowerCase();
       let reply = "";
       if (query.includes("help") || query.includes("menu")) {
         reply = "Agent Oracle dynamic systems active:\n- Chat: secure encryption protocols.\n- Telemetry Audit: header diagnostics.\n- Optimizer: social caption updates.";
@@ -39,8 +42,69 @@ export default function AgentScreen() {
         reply = `Audit request logged. Processing: "${query}". Connection nodes remain clean.`;
       }
       setLogs(prev => [...prev, reply]);
-      setIsGenerating(false);
-    }, 1000);
+    };
+
+    if (apiKey) {
+      try {
+        const historyContents = logs.slice(-6).map(log => {
+          const isUser = log.startsWith("> ");
+          return {
+            role: isUser ? "user" : "model",
+            parts: [{ text: isUser ? log.substring(2) : log }]
+          };
+        });
+
+        historyContents.push({
+          role: "user",
+          parts: [{ text: userText }]
+        });
+
+        const systemInstruction = {
+          parts: [
+            {
+              text: "You are Agent Oracle, the advanced mobile AI assistant for Omnisphere R18. Omnisphere is a decentralized, zero-telemetry, censor-free social platform. Creators keep 95% of direct cash flows. Keep your responses short (under 3 sentences), highly technical, and aligned with a cyber-neon, cypherpunk hacker aesthetic."
+            }
+          ]
+        };
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              contents: historyContents,
+              systemInstruction: systemInstruction
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData?.error?.message || `API error (${response.status})`);
+        }
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Oracle communication line timed out.";
+        
+        setLogs(prev => [...prev, text]);
+      } catch (err: any) {
+        console.error("Mobile Gemini API Error:", err);
+        setLogs(prev => [...prev, `⚠️ [API FAILURE] ${err.message}. Falling back to local offline protocols.`]);
+        setTimeout(() => {
+          triggerOfflineReply(userText);
+        }, 800);
+      } finally {
+        setIsGenerating(false);
+      }
+    } else {
+      setTimeout(() => {
+        triggerOfflineReply(userText);
+        setIsGenerating(false);
+      }, 1000);
+    }
   };
 
   const handleScan = () => {
@@ -71,8 +135,27 @@ export default function AgentScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Agent Oracle Terminal</Text>
-        <UserCheck size={18} color="#00ff66" />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <TouchableOpacity onPress={() => setShowApiKeyInput(!showApiKeyInput)} style={styles.keyToggleBtn}>
+            <Key size={18} color={apiKey ? "#00ff66" : "#ff007f"} />
+          </TouchableOpacity>
+          <UserCheck size={18} color="#00ff66" />
+        </View>
       </View>
+
+      {showApiKeyInput && (
+        <View style={styles.apiConfigContainer}>
+          <Text style={styles.configLabel}>GOOGLE AI STUDIO API KEY</Text>
+          <TextInput
+            style={styles.configInput}
+            value={apiKey}
+            onChangeText={setApiKey}
+            placeholder="Enter Gemini API Key..."
+            placeholderTextColor="#52525b"
+            secureTextEntry={true}
+          />
+        </View>
+      )}
 
       <ScrollView style={styles.terminalContainer} contentContainerStyle={styles.terminalContent}>
         {logs.map((log, index) => (
@@ -237,5 +320,32 @@ const styles = StyleSheet.create({
     color: "#00ff66",
     fontSize: 11,
     fontWeight: "600"
+  },
+  keyToggleBtn: {
+    padding: 4
+  },
+  apiConfigContainer: {
+    backgroundColor: "#18181b",
+    borderBottomWidth: 1,
+    borderBottomColor: "#27272a",
+    padding: 12
+  },
+  configLabel: {
+    color: "#a1a1aa",
+    fontSize: 9,
+    fontWeight: "bold",
+    fontFamily: "monospace",
+    marginBottom: 6
+  },
+  configInput: {
+    height: 36,
+    backgroundColor: "#09090b",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#27272a",
+    paddingHorizontal: 10,
+    color: "#fff",
+    fontSize: 11,
+    fontFamily: "monospace"
   }
 });

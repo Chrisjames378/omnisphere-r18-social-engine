@@ -21,7 +21,15 @@ import {
   Flame,
   ShieldCheck,
   Database,
-  UserCheck
+  UserCheck,
+  Paperclip,
+  Trash2,
+  FolderArchive,
+  Music,
+  FileText,
+  Binary,
+  Download,
+  Brain
 } from "lucide-react";
 
 // Types
@@ -46,6 +54,11 @@ interface Post {
   likes_count: number;
   created_at: string;
   liked_by_user?: boolean;
+  locked_file?: {
+    type: "blend" | "wav" | "pdf" | "zip";
+    name: string;
+    size: string;
+  };
 }
 
 interface Message {
@@ -131,7 +144,8 @@ const INITIAL_POSTS: Post[] = [
     media_url: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80",
     is_locked: false,
     likes_count: 84,
-    created_at: "2026-06-15T22:30:00Z"
+    created_at: "2026-06-15T22:30:00Z",
+    locked_file: { type: "wav", name: "midnight_static_teaser.wav", size: "4.8 MB" }
   },
   {
     id: "post-2",
@@ -140,7 +154,8 @@ const INITIAL_POSTS: Post[] = [
     media_url: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
     is_locked: true,
     likes_count: 142,
-    created_at: "2026-06-15T20:15:00Z"
+    created_at: "2026-06-15T20:15:00Z",
+    locked_file: { type: "zip", name: "industrial_photoshoot_8k.zip", size: "480.2 MB" }
   },
   {
     id: "post-3",
@@ -158,7 +173,8 @@ const INITIAL_POSTS: Post[] = [
     media_url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
     is_locked: true,
     likes_count: 55,
-    created_at: "2026-06-15T15:00:00Z"
+    created_at: "2026-06-15T15:00:00Z",
+    locked_file: { type: "blend", name: "neon_shader_v1.blend", size: "38.5 MB" }
   },
   {
     id: "post-5",
@@ -175,7 +191,8 @@ const INITIAL_POSTS: Post[] = [
     media_url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80",
     is_locked: true,
     likes_count: 892,
-    created_at: "2026-06-15T09:30:00Z"
+    created_at: "2026-06-15T09:30:00Z",
+    locked_file: { type: "pdf", name: "telemetry_brokerage_dossier.pdf", size: "14.1 MB" }
   }
 ];
 
@@ -206,8 +223,8 @@ function BiometricScannerCanvas() {
     if (!ctx) return;
 
     let animationId: number;
-    let width = canvas.width = 180;
-    let height = canvas.height = 180;
+    const width = canvas.width = 180;
+    const height = canvas.height = 180;
 
     const particles: { x: number; y: number; vx: number; vy: number }[] = [];
     for (let i = 0; i < 20; i++) {
@@ -275,6 +292,23 @@ function BiometricScannerCanvas() {
   return <canvas ref={canvasRef} className="w-full h-full object-cover rounded-full" />;
 }
 
+function getFileIcon(type: "zip" | "blend" | "wav" | "pdf") {
+  switch (type) {
+    case "zip":
+      return <FolderArchive className="w-6 h-6 text-brand-primary" />;
+    case "blend":
+      return <Binary className="w-6 h-6 text-orange-400" />;
+    case "wav":
+      return <Music className="w-6 h-6 text-brand-accent" />;
+    case "pdf":
+      return <FileText className="w-6 h-6 text-red-500" />;
+    default:
+      return <FileText className="w-6 h-6 text-zinc-400" />;
+  }
+}
+
+const generateUniqueId = (prefix: string) => `${prefix}-${Date.now()}`;
+
 export default function App() {
   // Navigation & View States
   const [activeTab, setActiveTab] = useState<"feed" | "messages" | "studio" | "wallet" | "waitlist" | "agent">("feed");
@@ -287,6 +321,303 @@ export default function App() {
   const [visualizerBars, setVisualizerBars] = useState<number[]>(Array(24).fill(15));
   const audioCtxRef = useRef<AudioContext | null>(null);
   const activeOscillatorsRef = useRef<any[]>([]);
+
+  // File Download simulation states
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadedFiles, setDownloadedFiles] = useState<string[]>([]);
+
+  // Global Telemetry Ticker state
+  const [tickerLogs, setTickerLogs] = useState<string[]>([
+    "[NODE-USA-E] Handshake secured: ephemeral ECDH tunnel established.",
+    "[PWA-CACHE] Stale-while-revalidate thread successfully cached sw.js.",
+    "[DATABASE-RLS] Row Level Security verified for waitlist REST lookup.",
+    "[TRANS-TX] Creator Seraphina tipped $25.00 via PayPal subscription.",
+    "[SECURE-GATE] Age-gate biometric scanner canvas verified at 98.6% confidence.",
+    "[SHIELD-BLOCK] Blocked Google Analytics crawler (google-analytics.com).",
+    "[NODE-EUR-W] Block Added: hash 0x7fa2b98f2441a"
+  ]);
+
+  // Creator Yield Projections
+  const [subCount, setSubCount] = useState(2500);
+  const [subPrice, setSubPrice] = useState(9.99);
+  const [monthlyTips, setMonthlyTips] = useState(1250);
+
+  // Cryptographic ECDH Handshake States
+  const [handshakingUserId, setHandshakingUserId] = useState<string | null>(null);
+  const [handshakeStep, setHandshakeStep] = useState(0);
+  const [handshakeLogs, setHandshakeLogs] = useState<string[]>([]);
+  const [securedUsers, setSecuredUsers] = useState<string[]>([]);
+
+  // Omnishield Console States
+  const [shieldActive, setShieldActive] = useState(true);
+  const [zeroTelemetry, setZeroTelemetry] = useState(true);
+  const [antiScrape, setAntiScrape] = useState(true);
+  const [p2pChatEncrypt, setP2pChatEncrypt] = useState(true);
+  const [shieldLogs, setShieldLogs] = useState<string[]>([
+    "[SHIELD] System online. Port scraping detection: ACTIVE.",
+    "[SHIELD] Anti-telemetry headers bound to incoming REST queries.",
+    "[SHIELD] Local sandboxing mapping initialized for user profiles."
+  ]);
+
+  // Upgraded Web Audio Synthesizer parameters
+  const [synthWaveType, setSynthWaveType] = useState<"sawtooth" | "square" | "triangle" | "sine">("sawtooth");
+  const [synthFrequencyMultiplier, setSynthFrequencyMultiplier] = useState(1.0);
+  const [synthVibrato, setSynthVibrato] = useState(2);
+
+  // Real getUserMedia Stream & Live Stream HUD states
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [streamResolution, setStreamResolution] = useState("1280x720");
+  const [streamFPS, setStreamFPS] = useState(30);
+  const [streamAudioRate, setStreamAudioRate] = useState("48 kHz");
+  const [streamLogs, setStreamLogs] = useState<string[]>([
+    "Node Connection handshake established.",
+    "Decentralized P2P broadcast channel ACTIVE."
+  ]);
+  const [activeStreamTip, setActiveStreamTip] = useState<{ username: string; amount: number } | null>(null);
+  
+  const streamRef = useRef<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // VC Cap Table & Growth Projections
+  const [vcPreMoney, setVcPreMoney] = useState(25000000);
+  const [vcInvestment, setVcInvestment] = useState(5000000);
+  const [vcGrowthRate, setVcGrowthRate] = useState(150);
+
+  // Telemetry ticker simulation loop
+  useEffect(() => {
+    const systems = ["NODE-USA-E", "NODE-EUR-W", "NODE-ASIA-S", "DB-RLS", "PWA-SW", "SHIELD-BOT"];
+    const actions = [
+      () => `Block Added: hash 0x${Math.random().toString(16).substring(2, 14)}`,
+      () => `Biometric Scan confidence score verified at ${(95.5 + Math.random() * 4.4).toFixed(2)}%`,
+      () => `AES-256 Symmetric secret exchange completed for user_${Math.floor(100 + Math.random() * 900)}`,
+      () => `Blocked telemetry payload from ${["google-analytics.com", "facebook-pixel", "meta-crawler.bot"][Math.floor(Math.random() * 3)]}`,
+      () => `Database read connection pool optimized. RLS latency: ${Math.floor(8 + Math.random() * 15)}ms`,
+      () => `Completed Tip: $${(5 + Math.random() * 95).toFixed(2)} to Creator @${["seraphina", "kestrel", "neon_phantom", "atlas_mimi"][Math.floor(Math.random() * 4)]}`
+    ];
+
+    const interval = setInterval(() => {
+      const randomSys = systems[Math.floor(Math.random() * systems.length)];
+      const randomAct = actions[Math.floor(Math.random() * actions.length)]();
+      const newLog = `[${randomSys}] ${randomAct}`;
+      setTickerLogs(prev => {
+        const next = [...prev];
+        next.shift();
+        next.push(newLog);
+        return next;
+      });
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Omnishield blocked crawler ticker simulation
+  useEffect(() => {
+    if (!shieldActive) return;
+    const targets = [
+      "Meta crawler (graph.facebook.com) signature rejected.",
+      "Google Analytics event beacon dropped (telemetry packet drop).",
+      "Advertiser cookie tracker query-parameter stripped.",
+      "ByteDance scraper bot attempt shadow-logged and dropped.",
+      "User location mapping proxy request spoofed to local isolation.",
+      "Telemetry payload to metrics.meta.internal routed to null route."
+    ];
+
+    const interval = setInterval(() => {
+      const target = targets[Math.floor(Math.random() * targets.length)];
+      const timestamp = new Date().toLocaleTimeString();
+      setShieldLogs(prev => [`[${timestamp}] [BLOCKED] ${target}`, ...prev.slice(0, 15)]);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [shieldActive]);
+
+  const startCryptographicHandshake = (userId: string) => {
+    if (securedUsers.includes(userId)) {
+      setActiveChatUser(userId);
+      return;
+    }
+    
+    setHandshakingUserId(userId);
+    setHandshakeStep(0);
+    setHandshakeLogs([`[HANDSHAKE] Initializing P2P Ephemeral Channel mapping for creator...`]);
+
+    const logs = [
+      `[HANDSHAKE] Generating local Secp256k1 Elliptic Curve key pairs...`,
+      `[HANDSHAKE] Local Ephemeral Public Key: 04ae4f91bb8d9620ef3942...`,
+      `[HANDSHAKE] Exchanging public key signatures with receiver node...`,
+      `[HANDSHAKE] Computing shared Diffie-Hellman secret key matrix...`,
+      `[HANDSHAKE] Applying HKDF SHA-256 derivation keys...`,
+      `[HANDSHAKE] Establishing AES-256-GCM symmetric session token...`,
+      `[HANDSHAKE] Handshake established. Ephemeral channel SECURED.`
+    ];
+
+    let step = 0;
+    const interval = setInterval(() => {
+      if (step >= logs.length) {
+        clearInterval(interval);
+        setTimeout(() => {
+          setSecuredUsers(prev => [...prev, userId]);
+          setActiveChatUser(userId);
+          setHandshakingUserId(null);
+        }, 500);
+        return;
+      }
+      setHandshakeLogs(prev => [...prev, logs[step]]);
+      setHandshakeStep(step + 1);
+      step++;
+    }, 300);
+  };
+
+  const startLiveStream = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 1280, height: 720, frameRate: 30 },
+        audio: true
+      });
+      streamRef.current = mediaStream;
+      setIsStreaming(true);
+      
+      // Bind stream to video element
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+        }
+      }, 100);
+      
+      // Get track details
+      const videoTrack = mediaStream.getVideoTracks()[0];
+      const audioTrack = mediaStream.getAudioTracks()[0];
+      
+      if (videoTrack) {
+        const settings = videoTrack.getSettings();
+        setStreamResolution(`${settings.width || 1280}x${settings.height || 720}`);
+        setStreamFPS(Math.round(settings.frameRate || 30));
+      }
+      if (audioTrack) {
+        const settings = audioTrack.getSettings();
+        setStreamAudioRate(settings.sampleRate ? `${settings.sampleRate / 1000} kHz` : "48 kHz");
+      }
+      
+      setStreamLogs([
+        "[BROADCAST] Camera media tracks successfully bound.",
+        "[BROADCAST] Audio capture initialized at 48kHz sampling rate.",
+        "[BROADCAST] Ephemeral WebRTC broadcast stream ONLINE."
+      ]);
+    } catch (err: any) {
+      console.error("Failed to acquire camera: ", err);
+      alert(`Could not access camera/microphone: ${err.message}. Starting fallback digital visualizer.`);
+      setIsStreaming(true);
+      setStreamLogs([
+        "[BROADCAST] Camera acquisition failed: Permission Denied.",
+        "[BROADCAST] Starting fallback digital visualizer stream...",
+        "[BROADCAST] Ephemeral fallback broadcast stream ONLINE."
+      ]);
+    }
+  };
+
+  const stopLiveStream = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsStreaming(false);
+    setActiveStreamTip(null);
+  };
+
+  const toggleMuteStream = () => {
+    if (streamRef.current) {
+      const audioTrack = streamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMuted(!audioTrack.enabled);
+        setStreamLogs(prev => [...prev, `[BROADCAST] Audio track ${audioTrack.enabled ? "UNMUTED" : "MUTED"}.`]);
+      }
+    } else {
+      setIsMuted(!isMuted);
+    }
+  };
+
+  // Live stream chat & tipping simulation
+  useEffect(() => {
+    if (!isStreaming) return;
+    
+    const comments = [
+      "This WebRTC quality is insane. No lag at all!",
+      "Wait, is this running completely P2P on our nodes?",
+      "Just tipped $10.00! Keep it up!",
+      "Zero telemetry live stream, finally a safe space.",
+      "Loving the synth arpeggios in the background!",
+      "Legacy sites would have banned this stream already.",
+      "Is the source mesh file available to download?",
+      "Yes, sub to unlock his post attachments below!",
+      "Greetings from Berlin node!",
+      "P2P packets routing through proxy tunnel successfully."
+    ];
+    
+    const users = ["cypher_punk", "vortex", "hacker_neon", "matrix_coder", "alice_d", "bob_s", "omega_prime", "kestrel_fan"];
+    
+    // Comments interval
+    const chatInterval = setInterval(() => {
+      const randomUser = users[Math.floor(Math.random() * users.length)];
+      const randomComment = comments[Math.floor(Math.random() * comments.length)];
+      setStreamLogs(prev => [...prev, `@${randomUser}: ${randomComment}`].slice(-30)); // Keep last 30
+    }, 2500);
+
+    // Tipping alerts interval
+    const tipInterval = setInterval(() => {
+      const randomUser = users[Math.floor(Math.random() * users.length)];
+      const randomAmount = [5, 10, 25, 50, 100][Math.floor(Math.random() * 5)];
+      
+      setActiveStreamTip({ username: randomUser, amount: randomAmount });
+      
+      // Auto-add tip log to chat
+      setStreamLogs(prev => [...prev, `[TIP ALERT] @${randomUser} tipped $${randomAmount.toFixed(2)}!`]);
+      
+      // Auto-hide alert after 3 seconds
+      setTimeout(() => {
+        setActiveStreamTip(null);
+      }, 3000);
+      
+    }, 7000);
+
+    return () => {
+      clearInterval(chatInterval);
+      clearInterval(tipInterval);
+    };
+  }, [isStreaming]);
+
+  // Creator File Attachment Console states
+  const [hasAttachedFile, setHasAttachedFile] = useState(false);
+  const [postFileType, setPostFileType] = useState<"blend" | "wav" | "pdf" | "zip">("zip");
+  const [postFileName, setPostFileName] = useState("");
+  const [postFileSize, setPostFileSize] = useState("");
+
+  const handleDownloadFile = (postId: string, fileName: string) => {
+    if (downloadingFileId) return;
+    
+    setDownloadingFileId(postId);
+    setDownloadProgress(0);
+    
+    const interval = setInterval(() => {
+      setDownloadProgress(p => {
+        if (p >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setDownloadingFileId(null);
+            setDownloadedFiles(prev => [...prev, postId]);
+            alert(`Asset download completed: ${fileName} saved to your local offline directory.`);
+          }, 400);
+          return 100;
+        }
+        return p + 10;
+      });
+    }, 120);
+  };
 
   const stopSynth = () => {
     setIsPlayingSynth(false);
@@ -343,8 +674,23 @@ export default function App() {
         const filter = ctx.createBiquadFilter();
         const gainNode = ctx.createGain();
         
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(item.note, now + item.time);
+        osc.type = synthWaveType;
+        const targetFreq = item.note * synthFrequencyMultiplier;
+        osc.frequency.setValueAtTime(targetFreq, now + item.time);
+        
+        // Add LFO Vibrato Modulation
+        if (synthVibrato > 0) {
+          const lfo = ctx.createOscillator();
+          const lfoGain = ctx.createGain();
+          lfo.frequency.setValueAtTime(synthVibrato * 3, now + item.time); // LFO Speed
+          lfoGain.gain.setValueAtTime(10, now + item.time); // Vibrato Depth
+          
+          lfo.connect(lfoGain);
+          lfoGain.connect(osc.frequency);
+          
+          lfo.start(now + item.time);
+          lfo.stop(now + item.time + duration);
+        }
         
         filter.type = "lowpass";
         filter.frequency.setValueAtTime(900, now + item.time);
@@ -401,12 +747,14 @@ export default function App() {
   const [paypalAmount, setPaypalAmount] = useState(9.99);
   const [isPaypalTip, setIsPaypalTip] = useState(false);
   const [paypalSubscriptionStep, setPaypalSubscriptionStep] = useState<"none" | "login" | "loading" | "approved">("none");
+  const [approvedPaypalTxId, setApprovedPaypalTxId] = useState("");
   const [paypalEmail, setPaypalEmail] = useState("sandbox-buyer@omnisphere.app");
   const [paypalPassword, setPaypalPassword] = useState("12345678");
   const [paypalClientId, setPaypalClientId] = useState(() => localStorage.getItem("omni_pp_client_id") || "AY0l_0kyQz8hIefxBnrlYDbzn_2tq8pKloNKJKyGi7NBMIWv-zQqUASsNuCqtQsMbaSH8HQbsiOA1oQn");
   const [paypalSecret, setPaypalSecret] = useState(() => localStorage.getItem("omni_pp_secret") || "EEXjH60kSMLiqhgfSLV4_K2Gku3FMmZ8hdWi5B4Zc3aKrGbt0SeGQrvPcATwr6xNn5Z2QJj8-_96Vj7p");
   const [paypalPlanId, setPaypalPlanId] = useState(() => localStorage.getItem("omni_pp_plan_id") || "P-78X90412B789");
   const [paypalLoadingText, setPaypalLoadingText] = useState("");
+  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem("omni_gemini_api_key") || "");
 
   // Agent Oracle States
   const [agentMessages, setAgentMessages] = useState<{sender: "user" | "oracle", text: string, time: string}[]>(() => {
@@ -494,6 +842,42 @@ export default function App() {
   const [depositAmount, setDepositAmount] = useState("100");
   const [withdrawAmount, setWithdrawAmount] = useState("50");
 
+  // PWA Install Prompt state & handlers
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(() => {
+    return localStorage.getItem("omni_install_dismissed") !== "true";
+  });
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      if (localStorage.getItem("omni_install_dismissed") !== "true") {
+        setShowInstallBanner(true);
+      }
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstallPWA = async () => {
+    if (!deferredPrompt) {
+      alert("Installation protocol ready. To install, select 'Add to Home Screen' from your browser settings or share sheet.");
+      dismissInstallBanner();
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`PWA install outcome: ${outcome}`);
+    setDeferredPrompt(null);
+    dismissInstallBanner();
+  };
+
+  const dismissInstallBanner = () => {
+    localStorage.setItem("omni_install_dismissed", "true");
+    setShowInstallBanner(false);
+  };
+
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Sync to LocalStorage
@@ -546,6 +930,11 @@ export default function App() {
     localStorage.setItem("omni_pp_plan_id", paypalPlanId);
   }, [paypalClientId, paypalSecret, paypalPlanId]);
 
+  // Sync Gemini API Key settings
+  useEffect(() => {
+    localStorage.setItem("omni_gemini_api_key", geminiApiKey);
+  }, [geminiApiKey]);
+
   // Polling interval sync loop for Supabase
   useEffect(() => {
     if (!isSupabaseConnected || !supabaseUrl || !supabaseAnonKey) return;
@@ -577,7 +966,8 @@ export default function App() {
           setPosts(dbPosts.map((p: any) => ({
             ...p,
             likes_count: Number(p.likes_count),
-            is_locked: Boolean(p.is_locked)
+            is_locked: Boolean(p.is_locked),
+            locked_file: p.locked_file ? (typeof p.locked_file === "string" ? JSON.parse(p.locked_file) : p.locked_file) : undefined
           })));
         }
 
@@ -640,6 +1030,7 @@ export default function App() {
         setPaypalLoadingText("Authorizing recurring payment agreement...");
         
         setTimeout(() => {
+          setApprovedPaypalTxId(`PP-TX-${Math.floor(100000 + Math.random() * 900000)}`);
           setPaypalSubscriptionStep("approved");
         }, 1000);
       }, 1000);
@@ -658,7 +1049,7 @@ export default function App() {
       );
 
       const newTx: Transaction = {
-        id: `tx-pp-${Date.now()}`,
+        id: generateUniqueId("tx-pp"),
         sender_id: null,
         receiver_id: paypalCreatorId,
         amount: paypalAmount,
@@ -691,7 +1082,7 @@ export default function App() {
       setSubscriptions(prev => [...prev, paypalCreatorId]);
 
       const newTx: Transaction = {
-        id: `tx-pp-${Date.now()}`,
+        id: generateUniqueId("tx-pp"),
         sender_id: null,
         receiver_id: paypalCreatorId,
         amount: paypalAmount,
@@ -729,13 +1120,14 @@ export default function App() {
   };
 
   // Agent Oracle Action Helpers
-  const handleSendAgentMessage = (e: React.FormEvent) => {
+  const handleSendAgentMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agentInput.trim() || isAgentGenerating) return;
 
+    const userText = agentInput;
     const newMsg = {
       sender: "user" as const,
-      text: agentInput,
+      text: userText,
       time: new Date().toLocaleTimeString()
     };
 
@@ -743,9 +1135,9 @@ export default function App() {
     setAgentInput("");
     setIsAgentGenerating(true);
 
-    setTimeout(() => {
-      const query = agentInput.toLowerCase();
-      let replyText = "";
+    const triggerOfflineReply = (txt: string) => {
+      const query = txt.toLowerCase();
+      let replyText: string;
 
       if (query.includes("help") || query.includes("menu")) {
         replyText = "Agent Oracle dynamic systems are operational. I can assist you with:\n1. Telemetry Audit: Scan tracking scripts & headers.\n2. Social Content Optimizer: Upgrade your feed copy to fit premium aesthetics.\n3. Creator Financial Advisor: Recommend standard and custom subscription pricing tiers.\n\nSimply run the dashboards below or chat about encryption schemas.";
@@ -756,7 +1148,7 @@ export default function App() {
       } else if (query.includes("hello") || query.includes("hi ") || query.includes("hey")) {
         replyText = "Greetings. Connection handshake secured. Let me know if you would like me to optimize a feed caption, calculate pricing metrics, or run a diagnostic telemetry sweep.";
       } else {
-        replyText = `Audit request logged. Processing: "${agentInput}". Omnisphere strips telemetry files on image uploads. Let me know if you'd like to perform a live scan or adjust creator subscription prices.`;
+        replyText = `Audit request logged. Processing: "${txt}". Omnisphere strips telemetry files on image uploads. Let me know if you'd like to perform a live scan or adjust creator subscription prices.`;
       }
 
       const oracleMsg = {
@@ -765,8 +1157,77 @@ export default function App() {
         time: new Date().toLocaleTimeString()
       };
       setAgentMessages(prev => [...prev, oracleMsg]);
-      setIsAgentGenerating(false);
-    }, 1200);
+    };
+
+    if (geminiApiKey) {
+      try {
+        const historyContents = agentMessages.slice(-10).map(m => ({
+          role: m.sender === "user" ? "user" : "model",
+          parts: [{ text: m.text }]
+        }));
+        
+        historyContents.push({
+          role: "user",
+          parts: [{ text: userText }]
+        });
+
+        const systemInstruction = {
+          parts: [
+            {
+              text: "You are Agent Oracle, the advanced AI core for Omnisphere R18 Social Core Engine. Omnisphere is a decentralized, zero-telemetry, censor-free social platform for premium creators. Creators keep 95% of direct cash flows. The app features: 1) Uncensored Feed with premium Monetized File Lockers (ZIP archives, Blender meshes, raw audio wav stems, PDF dossiers); 2) Live DMs with context-aware auto-replies; 3) Wallet Dashboard & creator stats; 4) Age Verification (biometric face scan interface); 5) Standalone Waitlist portal; 6) Live Camera stream HUD with scrolling P2P chat, tipping popups, and live node telemetry; 7) Web Audio Synthesizer arpeggiator widget. Keep your responses short, technical, and formatted in clean markdown. Always align with a cyber-neon, cypherpunk hacker aesthetic."
+            }
+          ]
+        };
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              contents: historyContents,
+              systemInstruction: systemInstruction
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData?.error?.message || `API error (${response.status})`);
+        }
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Oracle communication line timed out. Please verify your API settings.";
+
+        const oracleMsg = {
+          sender: "oracle" as const,
+          text: text,
+          time: new Date().toLocaleTimeString()
+        };
+        setAgentMessages(prev => [...prev, oracleMsg]);
+      } catch (err: any) {
+        console.error("Gemini API Error:", err);
+        const errAlert = {
+          sender: "oracle" as const,
+          text: `⚠️ [API FAILURE] Connection to Google AI Studio failed: ${err.message}. Falling back to local offline protocols.`,
+          time: new Date().toLocaleTimeString()
+        };
+        setAgentMessages(prev => [...prev, errAlert]);
+        
+        setTimeout(() => {
+          triggerOfflineReply(userText);
+        }, 1000);
+      } finally {
+        setIsAgentGenerating(false);
+      }
+    } else {
+      setTimeout(() => {
+        triggerOfflineReply(userText);
+        setIsAgentGenerating(false);
+      }, 1200);
+    }
   };
 
   const handleRunTelemetryScan = () => {
@@ -798,7 +1259,7 @@ export default function App() {
     e.preventDefault();
     if (!optRawText.trim()) return;
 
-    let result = "";
+    let result: string;
     if (optNiche === "Model") {
       result = `⚡ EXCLUSIVE CONTENT | Uncensored preview from my latest industrial warehouse shoot. No tracking cookies, no shadowbans. Unlock the full 8K album in my subscription feed. 🖤`;
     } else if (optNiche === "Artist") {
@@ -882,7 +1343,7 @@ export default function App() {
 
     // Create transaction
     const newTx: Transaction = {
-      id: `tx-${Date.now()}`,
+      id: generateUniqueId("tx"),
       sender_id: "currentUser",
       receiver_id: creatorId,
       amount: creator.subscription_price,
@@ -920,7 +1381,7 @@ export default function App() {
 
     // Create transaction
     const newTx: Transaction = {
-      id: `tx-${Date.now()}`,
+      id: generateUniqueId("tx"),
       sender_id: "currentUser",
       receiver_id: tipCreatorId,
       amount,
@@ -948,6 +1409,14 @@ export default function App() {
       created_at: new Date().toISOString()
     };
 
+    if (hasAttachedFile && postFileName.trim()) {
+      newPost.locked_file = {
+        type: postFileType,
+        name: postFileName.trim(),
+        size: postFileSize.trim() || "15 MB"
+      };
+    }
+
     if (isSupabaseConnected) {
       const client = getSupabase();
       if (client) {
@@ -956,7 +1425,8 @@ export default function App() {
           content: newPostContent,
           media_url: newPostImage.trim() || null,
           is_locked: newPostLocked,
-          likes_count: 0
+          likes_count: 0,
+          locked_file: newPost.locked_file ? JSON.stringify(newPost.locked_file) : null
         });
       }
     } else {
@@ -966,6 +1436,9 @@ export default function App() {
     setNewPostContent("");
     setNewPostImage("");
     setNewPostLocked(false);
+    setHasAttachedFile(false);
+    setPostFileName("");
+    setPostFileSize("");
   };
 
   const handleLikePost = (postId: string) => {
@@ -1014,7 +1487,7 @@ export default function App() {
       const creator = profiles.find(p => p.id === activeChatUser);
       if (!creator) return;
 
-      let replyText = "";
+      let replyText: string;
       const textLower = chatInput.toLowerCase();
 
       if (creator.username === "cyber_vixen") {
@@ -1046,7 +1519,7 @@ export default function App() {
       }
 
       const replyMsg: Message = {
-        id: `msg-reply-${Date.now()}`,
+        id: generateUniqueId("msg-reply"),
         sender_id: activeChatUser,
         receiver_id: "currentUser",
         content: replyText,
@@ -1373,12 +1846,53 @@ export default function App() {
                 Sandbox credentials configured. Smart buttons authorize recurring checkout agreements via standard client token bindings.
               </p>
             </div>
+
+            <div className="flex-1 space-y-4 font-mono">
+              <h3 className="text-brand-accent font-bold flex items-center gap-2 text-sm">
+                <Brain className="w-4 h-4 text-brand-accent" /> GOOGLE AI STUDIO CONFIG
+              </h3>
+              
+              <div className="space-y-1">
+                <label className="text-[10px] text-dark-muted">GEMINI API KEY</label>
+                <input
+                  type="password"
+                  value={geminiApiKey}
+                  onChange={e => setGeminiApiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  className="w-full px-3 py-1.5 rounded bg-dark-bg border border-dark-border text-white text-xs focus:outline-none font-mono"
+                />
+              </div>
+              
+              <p className="text-[10px] text-zinc-500 leading-relaxed pt-1 border-t border-dark-border/40">
+                Provide a Gemini API Key to enable the production-grade **Agent Oracle** chatbot using Gemini 2.5 Flash. Leaves it offline if left empty.
+              </p>
+            </div>
           </div>
         </div>
       )}
 
       {/* Core Grid */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8 flex flex-col gap-6">
+        
+        {/* Global Activity HUD Ticker */}
+        <div className="w-full bg-zinc-950 border border-dark-border rounded-2xl px-4 py-3 overflow-hidden relative flex items-center shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+          <div className="flex items-center gap-2 text-xs font-cyber font-bold uppercase tracking-wider shrink-0 text-brand-matrix border-r border-dark-border pr-4">
+            <span className="w-2.5 h-2.5 bg-brand-matrix rounded-full animate-ping shrink-0 animate-pulse-slow" />
+            <span>Core Telemetry Stream</span>
+          </div>
+          <div className="w-full overflow-hidden flex whitespace-nowrap pl-4 relative">
+            <div className="animate-marquee inline-flex gap-12 text-[11px] font-mono text-zinc-400">
+              {tickerLogs.map((log, idx) => (
+                <span key={idx} className="inline-flex items-center gap-2">
+                  <span className="text-brand-accent">✦</span>
+                  {log}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8 w-full">
         
         {/* Navigation Sidebar */}
         <nav className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 lg:w-60 shrink-0">
@@ -1461,6 +1975,131 @@ export default function App() {
           {/* TAB 1: UNCENSORED FEED */}
           {activeTab === "feed" && (
             <div className="space-y-6">
+              {/* Live Creator Stream HUD */}
+              <div className="glass-panel-accent p-6 rounded-2xl space-y-4 relative overflow-hidden">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-3 h-3 rounded-full ${isStreaming ? "bg-red-500 animate-pulse" : "bg-zinc-600"}`} />
+                    <h3 className="font-cyber font-bold text-white text-base tracking-wider uppercase">
+                      {isStreaming ? "Live Decentered Broadcast" : "Decentralized P2P Live Broadcast Console"}
+                    </h3>
+                  </div>
+                  {isStreaming && (
+                    <div className="flex items-center gap-4 text-xs font-mono text-zinc-400 bg-black/60 px-3 py-1 rounded-full border border-dark-border">
+                      <span className="text-brand-matrix">● SECURE ROUTING: P2P Tunnel</span>
+                      <span className="text-brand-accent">FPS: {streamFPS}</span>
+                      <span className="text-brand-primary">{streamResolution}</span>
+                    </div>
+                  )}
+                </div>
+
+                {!isStreaming ? (
+                  <div className="h-64 rounded-xl bg-zinc-950 border border-dark-border flex flex-col items-center justify-center text-center p-6 space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-brand-primary/10 border border-brand-primary/30 flex items-center justify-center text-brand-primary animate-pulse">
+                      <Camera className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h4 className="font-cyber font-bold text-white text-sm">Go Live Instantly and Decentralized</h4>
+                      <p className="text-xs text-dark-muted max-w-md mx-auto mt-1">
+                        Broadcast directly to your subscribers' browsers with end-to-end encryption. No centralized servers, no transcoding quality loss.
+                      </p>
+                    </div>
+                    <button
+                      onClick={startLiveStream}
+                      className="px-6 py-2.5 rounded-xl bg-brand-primary text-white font-bold text-xs font-cyber tracking-wider hover:bg-brand-primary/80 hover:shadow-[0_0_20px_rgba(255,0,127,0.4)] transition-all cursor-pointer"
+                    >
+                      START BROADCAST
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* Video Preview */}
+                    <div className="lg:col-span-2 relative h-80 rounded-xl bg-black border border-brand-primary/40 overflow-hidden shadow-[0_0_25px_rgba(255,0,127,0.15)]">
+                      {/* HTML5 Video Element */}
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        muted={isMuted}
+                        className="w-full h-full object-cover"
+                      />
+
+                      {/* Streaming HUD Overlays */}
+                      <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-sm border border-brand-primary/30 px-3 py-1.5 rounded-lg text-[10px] font-mono text-zinc-300 space-y-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping" />
+                          <span className="text-white font-bold">LIVE BROADCAST</span>
+                        </div>
+                        <div>RES: <span className="text-brand-accent">{streamResolution}</span></div>
+                        <div>FPS: <span className="text-brand-matrix">{streamFPS}</span></div>
+                        <div>AUDIO: <span className="text-brand-primary">{streamAudioRate}</span></div>
+                        <div>LATENCY: <span className="text-yellow-400">0.04s (P2P)</span></div>
+                      </div>
+
+                      {/* Tip Alert overlay */}
+                      {activeStreamTip && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                          <div className="glass-panel-fuchsia p-6 rounded-2xl text-center border-2 border-brand-primary shadow-[0_0_30px_rgba(255,0,127,0.4)] animate-bounce-slow">
+                            <span className="text-2xl">💎</span>
+                            <h4 className="font-cyber font-bold text-white text-lg mt-2 font-mono">
+                              @{activeStreamTip.username}
+                            </h4>
+                            <p className="text-xs text-brand-primary font-bold mt-1 uppercase tracking-widest font-cyber">
+                              Tipped ${activeStreamTip.amount.toFixed(2)}!
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Controls Overlay */}
+                      <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                        <button
+                          onClick={toggleMuteStream}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-cyber font-semibold border transition-all cursor-pointer ${
+                            isMuted
+                              ? "bg-red-500/20 border-red-500 text-red-400"
+                              : "bg-black/60 border-dark-border text-white hover:bg-black/80"
+                          }`}
+                        >
+                          {isMuted ? "UNMUTE MIC" : "MUTE MIC"}
+                        </button>
+                        <button
+                          onClick={stopLiveStream}
+                          className="px-3 py-1.5 rounded-lg text-xs font-cyber font-semibold bg-red-600 border border-red-500 text-white hover:bg-red-700 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all cursor-pointer"
+                        >
+                          END STREAM
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Live Chat Log Dashboard */}
+                    <div className="h-80 rounded-xl bg-zinc-950 border border-dark-border flex flex-col justify-between overflow-hidden">
+                      <div className="p-3 border-b border-dark-border bg-dark-bg/60 flex items-center justify-between">
+                        <span className="text-xs font-cyber font-bold text-white uppercase tracking-wider">Decentralized P2P Chat</span>
+                        <span className="text-[10px] text-brand-matrix font-mono">ON-CHAIN LOGS</span>
+                      </div>
+                      <div className="flex-1 p-3 overflow-y-auto font-mono text-[10px] space-y-2 flex flex-col-reverse justify-start">
+                        {[...streamLogs].reverse().map((log, idx) => {
+                          const isTipAlert = log.includes("[TIP ALERT]");
+                          const isBroadcast = log.includes("[BROADCAST]");
+                          
+                          let textColor = "text-zinc-400";
+                          if (isTipAlert) textColor = "text-brand-primary font-bold";
+                          else if (isBroadcast) textColor = "text-brand-accent";
+                          else if (log.startsWith("@")) textColor = "text-white";
+
+                          return (
+                            <div key={idx} className={`${textColor} break-all bg-dark-bg/30 p-1.5 rounded border border-dark-border/20`}>
+                              {log}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Creator Status Prompt */}
               <div className="glass-panel-fuchsia p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -1499,6 +2138,72 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* File Attachment Configuration Console */}
+                {hasAttachedFile && (
+                  <div className="p-4 rounded-xl bg-zinc-950 border border-brand-accent/30 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Paperclip className="w-4 h-4 text-brand-accent" />
+                        <span className="text-xs font-cyber font-bold text-white uppercase tracking-wider">Premium File Locker Console</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setHasAttachedFile(false);
+                          setPostFileName("");
+                          setPostFileSize("");
+                        }}
+                        className="text-dark-muted hover:text-red-400 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-dark-muted uppercase font-bold mb-1.5">File Type</label>
+                        <select
+                          value={postFileType}
+                          onChange={e => setPostFileType(e.target.value as any)}
+                          className="w-full px-3 py-2 rounded-lg bg-dark-bg border border-dark-border text-xs text-white focus:outline-none focus:border-brand-accent"
+                        >
+                          <option value="zip">ZIP Archive (.zip)</option>
+                          <option value="blend">Blender 3D Mesh (.blend)</option>
+                          <option value="wav">HQ Audio Stem (.wav)</option>
+                          <option value="pdf">Leak Dossier (.pdf)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-dark-muted uppercase font-bold mb-1.5">File Name</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. exclusive_textures.zip"
+                          value={postFileName}
+                          onChange={e => setPostFileName(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg bg-dark-bg border border-dark-border text-xs text-white focus:outline-none focus:border-brand-accent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-dark-muted uppercase font-bold mb-1.5">File Size</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 24.5 MB"
+                          value={postFileSize}
+                          onChange={e => setPostFileSize(e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg bg-dark-bg border border-dark-border text-xs text-white focus:outline-none focus:border-brand-accent"
+                        />
+                      </div>
+                    </div>
+                    
+                    <p className="text-[10px] text-dark-muted">
+                      💡 Locked files are only accessible to subscribers. Ensure "Lock for Subscribers" is checked to monetize this file!
+                    </p>
+                  </div>
+                )}
+
                 <div className="border-t border-dark-border/40 pt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                     {/* Image URL Input */}
@@ -1526,6 +2231,20 @@ export default function App() {
                       <Lock className="w-3.5 h-3.5 text-brand-primary" />
                       Lock for Subscribers
                     </label>
+
+                    {/* Premium File Attachment Toggle */}
+                    <button
+                      type="button"
+                      onClick={() => setHasAttachedFile(!hasAttachedFile)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                        hasAttachedFile
+                          ? "bg-brand-accent/20 border-brand-accent text-brand-accent shadow-[0_0_10px_rgba(0,242,254,0.2)]"
+                          : "bg-dark-bg/60 border-dark-border text-dark-muted hover:text-white hover:border-zinc-700"
+                      }`}
+                    >
+                      <Paperclip className="w-3.5 h-3.5" />
+                      {hasAttachedFile ? "Premium File Attached" : "Attach Premium File"}
+                    </button>
                   </div>
 
                   <button
@@ -1597,6 +2316,20 @@ export default function App() {
                             <p className="text-xs text-dark-muted mb-6">
                               Unlock this media post and access complete archive by subscribing to their exclusive feed.
                             </p>
+                            {/* Locked Premium File Teaser Card */}
+                            {post.locked_file && (
+                              <div className="mb-5 px-3.5 py-2 rounded-xl bg-black/50 border border-brand-primary/20 flex items-center gap-3 text-left w-full max-w-xs shadow-[0_0_15px_rgba(255,0,127,0.05)]">
+                                <div className="p-1.5 rounded bg-zinc-900 border border-zinc-800 shrink-0">
+                                  {getFileIcon(post.locked_file.type)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-xs font-bold text-zinc-300 block truncate">{post.locked_file.name}</span>
+                                  <span className="text-[10px] text-dark-muted block mt-0.5">{post.locked_file.size} • Locked Premium File</span>
+                                </div>
+                                <Lock className="w-3.5 h-3.5 text-brand-primary shrink-0" />
+                              </div>
+                            )}
+
                             <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
                               <button
                                 onClick={() => handleSubscribe(post.user_id)}
@@ -1625,6 +2358,80 @@ export default function App() {
                                 alt="Post attachment"
                                 className="w-full max-h-[480px] object-cover hover:scale-[1.01] transition-transform duration-500"
                               />
+                            </div>
+                          )}
+
+                          {/* Premium File Locker Card */}
+                          {post.locked_file && (
+                            <div className="mx-5 my-4 p-4 rounded-xl bg-zinc-950 border border-dark-border flex flex-col gap-3">
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="p-2 rounded bg-dark-bg border border-dark-border shrink-0">
+                                    {getFileIcon(post.locked_file.type)}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <span className="text-xs font-bold text-white block truncate">{post.locked_file.name}</span>
+                                    <span className="text-[10px] text-dark-muted block mt-0.5">
+                                      {post.locked_file.size} • {post.locked_file.type.toUpperCase()} File
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="shrink-0">
+                                  {downloadingFileId === post.id ? (
+                                    <div className="text-right">
+                                      <span className="text-[10px] font-mono text-brand-accent uppercase tracking-wider font-bold">
+                                        Downloading
+                                      </span>
+                                    </div>
+                                  ) : downloadedFiles.includes(post.id) ? (
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex items-center gap-1 text-brand-matrix text-xs font-bold">
+                                        <CheckCircle className="w-3.5 h-3.5" />
+                                        <span>Saved</span>
+                                      </div>
+                                      <button
+                                        onClick={() => handleDownloadFile(post.id, post.locked_file!.name)}
+                                        className="text-[10px] text-dark-muted hover:text-white underline cursor-pointer"
+                                      >
+                                        Re-download
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => handleDownloadFile(post.id, post.locked_file!.name)}
+                                      className="px-3 py-1.5 rounded-lg bg-dark-bg border border-dark-border hover:border-brand-accent text-brand-accent text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                      <Download className="w-3.5 h-3.5" />
+                                      Download
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {downloadingFileId === post.id && (
+                                <div className="space-y-1.5 pt-2 border-t border-dark-border/40">
+                                  <div className="flex justify-between text-[10px] font-mono text-dark-muted">
+                                    <span>
+                                      {(() => {
+                                        const match = post.locked_file.size.match(/^([\d.]+)\s*(\w+)/);
+                                        const sizeVal = match ? parseFloat(match[1]) : 0;
+                                        const sizeUnit = match ? match[2] : "MB";
+                                        return `${((downloadProgress / 100) * sizeVal).toFixed(1)} ${sizeUnit} / ${post.locked_file.size}`;
+                                      })()}
+                                    </span>
+                                    <span>
+                                      {(downloadProgress * 0.8).toFixed(1)} MB/s • {downloadProgress}%
+                                    </span>
+                                  </div>
+                                  <div className="h-1.5 w-full bg-dark-bg rounded-full overflow-hidden border border-dark-border/50">
+                                    <div
+                                      className="h-full bg-gradient-to-r from-brand-accent via-brand-secondary to-brand-primary transition-all duration-150"
+                                      style={{ width: `${downloadProgress}%` }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
 
@@ -1663,6 +2470,55 @@ export default function App() {
                                   ></div>
                                 ))}
                               </div>
+
+                              {/* Wave parameters */}
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-dark-border/40">
+                                <div>
+                                  <label className="block text-[8px] text-dark-muted uppercase font-bold mb-1">Oscillator Wave</label>
+                                  <select
+                                    value={synthWaveType}
+                                    onChange={e => setSynthWaveType(e.target.value as any)}
+                                    className="w-full px-2 py-1 rounded bg-dark-bg border border-dark-border text-[10px] text-white focus:outline-none"
+                                  >
+                                    <option value="sawtooth">Sawtooth</option>
+                                    <option value="square">Square</option>
+                                    <option value="triangle">Triangle</option>
+                                    <option value="sine">Sine</option>
+                                  </select>
+                                </div>
+                                
+                                <div>
+                                  <div className="flex justify-between text-[8px] text-dark-muted uppercase font-bold mb-1">
+                                    <span>Pitch Scale</span>
+                                    <span className="font-mono text-zinc-400">{synthFrequencyMultiplier.toFixed(1)}x</span>
+                                  </div>
+                                  <input
+                                    type="range"
+                                    min="0.5"
+                                    max="2.0"
+                                    step="0.1"
+                                    value={synthFrequencyMultiplier}
+                                    onChange={e => setSynthFrequencyMultiplier(parseFloat(e.target.value))}
+                                    className="w-full accent-brand-accent h-1 bg-zinc-900 rounded cursor-pointer"
+                                  />
+                                </div>
+
+                                <div>
+                                  <div className="flex justify-between text-[8px] text-dark-muted uppercase font-bold mb-1">
+                                    <span>LFO Vibrato</span>
+                                    <span className="font-mono text-zinc-400">{synthVibrato}Hz</span>
+                                  </div>
+                                  <input
+                                    type="range"
+                                    min="0"
+                                    max="10"
+                                    step="1"
+                                    value={synthVibrato}
+                                    onChange={e => setSynthVibrato(parseInt(e.target.value))}
+                                    className="w-full accent-brand-secondary h-1 bg-zinc-900 rounded cursor-pointer"
+                                  />
+                                </div>
+                              </div>
                             </div>
                           )}
                         </>
@@ -1685,7 +2541,7 @@ export default function App() {
                           <button
                             onClick={() => {
                               if (author.id !== "currentUser") {
-                                setActiveChatUser(author.id);
+                                startCryptographicHandshake(author.id);
                                 setActiveTab("messages");
                               }
                             }}
@@ -1736,7 +2592,7 @@ export default function App() {
                       return (
                         <button
                           key={creator.id}
-                          onClick={() => setActiveChatUser(creator.id)}
+                          onClick={() => startCryptographicHandshake(creator.id)}
                           className={`w-full p-3 rounded-xl flex items-center gap-3 transition-colors cursor-pointer text-left ${
                             isSelected ? "bg-dark-border/40 border border-dark-border" : "hover:bg-dark-card/60"
                           }`}
@@ -1758,85 +2614,134 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Chat View */}
               <div className="flex-1 flex flex-col bg-dark-bg/20">
-                {(() => {
-                  const creator = profiles.find(p => p.id === activeChatUser);
-                  if (!creator) return null;
+                {handshakingUserId ? (
+                  (() => {
+                    const creator = profiles.find(p => p.id === handshakingUserId);
+                    if (!creator) return null;
+                    return (
+                      <div className="flex-1 flex flex-col items-center justify-center p-8 bg-zinc-950/60 font-mono text-xs text-brand-matrix space-y-6">
+                        <div className="w-16 h-16 rounded-full bg-brand-matrix/10 border border-brand-matrix/30 flex items-center justify-center animate-pulse shadow-[0_0_20px_rgba(0,255,102,0.25)]">
+                          <Lock className="w-6 h-6 text-brand-matrix" />
+                        </div>
+                        <div className="max-w-md w-full text-center space-y-4">
+                          <h4 className="font-cyber font-bold text-white text-sm uppercase tracking-wider">Establishing Ephemeral P2P Tunnel</h4>
+                          <p className="text-zinc-500 text-[10px]">ECDH key exchange handshake with @{creator.username}</p>
+                          
+                          {/* Progress bar */}
+                          <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+                            <div 
+                              className="h-full bg-brand-matrix transition-all duration-300 shadow-[0_0_10px_rgba(0,255,102,0.6)]" 
+                              style={{ width: `${((handshakeStep + 1) / 8) * 100}%` }}
+                            />
+                          </div>
 
-                  const filteredMessages = messages.filter(
-                    m =>
-                      (m.sender_id === creator.id && m.receiver_id === "currentUser") ||
-                      (m.sender_id === "currentUser" && m.receiver_id === creator.id)
-                  );
+                          {/* Handshake logs */}
+                          <div className="p-4 rounded-xl bg-black border border-dark-border text-left space-y-2 h-48 overflow-y-auto font-mono text-[10px] text-zinc-400">
+                            {handshakeLogs.map((log, idx) => (
+                              <div key={idx} className={idx === handshakeLogs.length - 1 ? "text-brand-matrix font-bold" : ""}>
+                                {log}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()
+                ) : activeChatUser ? (
+                  (() => {
+                    const creator = profiles.find(p => p.id === activeChatUser);
+                    if (!creator) return null;
 
-                  return (
-                    <>
-                      {/* Chat Header */}
-                      <div className="px-6 py-4 border-b border-dark-border flex items-center justify-between bg-zinc-950/20">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={creator.avatar_url}
-                            alt={creator.display_name}
-                            className="w-10 h-10 rounded-full object-cover ring-1 ring-dark-border"
-                          />
-                          <div>
-                            <h4 className="font-bold text-white text-sm">{creator.display_name}</h4>
-                            <p className="text-xs text-brand-accent">@{creator.username}</p>
+                    const filteredMessages = messages.filter(
+                      m =>
+                        (m.sender_id === creator.id && m.receiver_id === "currentUser") ||
+                        (m.sender_id === "currentUser" && m.receiver_id === creator.id)
+                    );
+
+                    return (
+                      <>
+                        {/* Chat Header */}
+                        <div className="px-6 py-4 border-b border-dark-border flex items-center justify-between bg-zinc-950/20">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={creator.avatar_url}
+                              alt={creator.display_name}
+                              className="w-10 h-10 rounded-full object-cover ring-1 ring-dark-border"
+                            />
+                            <div>
+                              <h4 className="font-bold text-white text-sm">{creator.display_name}</h4>
+                              <p className="text-xs text-brand-accent">@{creator.username}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-mono text-brand-matrix bg-brand-matrix/10 border border-brand-matrix/30 px-2 py-0.5 rounded flex items-center gap-1 font-bold">
+                              <ShieldCheck className="w-3 h-3" /> P2P SECURED
+                            </span>
+                            <button
+                              onClick={() => {
+                                setTipCreatorId(creator.id);
+                                setTipModalOpen(true);
+                              }}
+                              className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 transition-colors cursor-pointer"
+                            >
+                              <Coins className="w-3.5 h-3.5" /> Tip Creator
+                            </button>
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => {
-                            setTipCreatorId(creator.id);
-                            setTipModalOpen(true);
-                          }}
-                          className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20 transition-colors cursor-pointer"
-                        >
-                          <Coins className="w-3.5 h-3.5" /> Tip Creator
-                        </button>
-                      </div>
-
-                      {/* Chat Messages */}
-                      <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                        {filteredMessages.map(msg => {
-                          const isMe = msg.sender_id === "currentUser";
-                          return (
-                            <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                              <div
-                                className={`max-w-md rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                                  isMe
-                                    ? "bg-gradient-to-tr from-brand-primary to-brand-secondary text-white rounded-br-none"
-                                    : "bg-dark-card border border-dark-border text-zinc-300 rounded-bl-none"
-                                }`}
-                              >
-                                {msg.content}
+                        {/* Chat Messages */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                          {filteredMessages.map(msg => {
+                            const isMe = msg.sender_id === "currentUser";
+                            return (
+                              <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                                <div
+                                  className={`max-w-md rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                                    isMe
+                                      ? "bg-brand-secondary text-white rounded-tr-none shadow-[0_0_12px_rgba(138,43,226,0.15)]"
+                                      : "bg-zinc-900 border border-dark-border text-zinc-300 rounded-tl-none"
+                                  }`}
+                                >
+                                  {msg.content}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                        <div ref={chatEndRef}></div>
-                      </div>
+                            );
+                          })}
+                          <div ref={chatEndRef}></div>
+                        </div>
 
-                      {/* Input Footer */}
-                      <form onSubmit={handleSendMessage} className="p-4 border-t border-dark-border bg-zinc-950/20 flex gap-3">
-                        <input
-                          type="text"
-                          value={chatInput}
-                          onChange={e => setChatInput(e.target.value)}
-                          placeholder={`Message @${creator.username}... (Simulated creator auto-replies)`}
-                          className="flex-1 px-4 py-3 rounded-xl bg-dark-bg/60 border border-dark-border text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-brand-accent"
-                        />
-                        <button
-                          type="submit"
-                          className="px-5 rounded-xl bg-white text-black hover:bg-zinc-200 transition-colors flex items-center justify-center cursor-pointer"
-                        >
-                          <Send className="w-4 h-4" />
-                        </button>
-                      </form>
-                    </>
-                  );
-                })()}
+                        {/* Input Footer */}
+                        <form onSubmit={handleSendMessage} className="p-4 border-t border-dark-border bg-zinc-950/20 flex gap-3">
+                          <input
+                            type="text"
+                            value={chatInput}
+                            onChange={e => setChatInput(e.target.value)}
+                            placeholder={`Message @${creator.username}... (Simulated creator auto-replies)`}
+                            className="flex-1 px-4 py-3 rounded-xl bg-dark-bg/60 border border-dark-border text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-brand-accent"
+                          />
+                          <button
+                            type="submit"
+                            className="px-5 rounded-xl bg-white text-black hover:bg-zinc-200 transition-colors flex items-center justify-center cursor-pointer"
+                          >
+                            <Send className="w-4 h-4" />
+                          </button>
+                        </form>
+                      </>
+                    );
+                  })()
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-zinc-950/10">
+                    <div className="w-12 h-12 rounded-full bg-dark-border/40 flex items-center justify-center text-dark-muted mb-4 border border-dark-border">
+                      <Lock className="w-5 h-5" />
+                    </div>
+                    <h5 className="font-cyber font-bold text-white text-sm uppercase tracking-wider">Secure Communications Tunnel</h5>
+                    <p className="text-xs text-dark-muted mt-1.5 max-w-xs leading-relaxed">
+                      Select a creator from the sidebar to establish an ephemeral, cryptographic P2P key-exchange handshake.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1880,51 +2785,309 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Creator Pricing Controller */}
-              <div className="bg-dark-card border border-dark-border p-6 rounded-2xl space-y-6">
-                <div>
-                  <h3 className="font-cyber font-bold text-white text-base">Subscription Price Settings</h3>
-                  <p className="text-xs text-dark-muted mt-1">Customize the monthly subscription cost to unlock your exclusive feed content.</p>
-                </div>
+              {/* Zuckerberg-Killer Yield Projections Console */}
+              {(() => {
+                const grossMonthly = (subCount * subPrice) + monthlyTips;
+                const omniNet = grossMonthly * 0.95;
+                const legacyNet = grossMonthly * 0.60;
+                const savedBonus = omniNet - legacyNet;
 
-                <div className="flex items-center gap-4 max-w-sm">
-                  <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 font-semibold">$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      defaultValue="9.99"
-                      className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-dark-bg/60 border border-dark-border text-white font-mono text-sm focus:outline-none focus:border-brand-primary"
-                    />
-                  </div>
-                  <button
-                    onClick={() => alert("Subscription settings saved successfully!")}
-                    className="px-5 py-2.5 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-all cursor-pointer whitespace-nowrap"
-                  >
-                    Update Price
-                  </button>
-                </div>
-              </div>
+                const maxRev = Math.max(10000, (10000 * subPrice) + monthlyTips);
+                const getXY = (s: number, split: number) => {
+                  const rev = (s * subPrice + monthlyTips) * split;
+                  const x = (s / 10000) * 320 + 40;
+                  const y = 140 - (rev / maxRev) * 110 - 15;
+                  return `${x},${y}`;
+                };
+                const omniPath = `M ${getXY(0, 0.95)} L ${getXY(2500, 0.95)} L ${getXY(5000, 0.95)} L ${getXY(7500, 0.95)} L ${getXY(10000, 0.95)}`;
+                const legacyPath = `M ${getXY(0, 0.60)} L ${getXY(2500, 0.60)} L ${getXY(5000, 0.60)} L ${getXY(7500, 0.60)} L ${getXY(10000, 0.60)}`;
+                const currentX = (subCount / 10000) * 320 + 40;
 
-              {/* Simulated Earnings Graph */}
-              <div className="bg-dark-card border border-dark-border p-6 rounded-2xl">
-                <h3 className="font-cyber font-bold text-white text-base mb-6">Weekly Earnings Breakdown</h3>
-                <div className="h-48 flex items-end gap-3 pt-6 border-b border-dark-border/40">
-                  {[450, 720, 980, 610, 1200, 1400, 1850].map((val, idx) => {
-                    const percent = (val / 2000) * 100;
-                    return (
-                      <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                        <span className="text-[10px] font-mono text-brand-accent">${val}</span>
-                        <div
-                          className="w-full rounded-t-lg bg-gradient-to-t from-brand-primary/80 to-brand-secondary transition-all duration-1000"
-                          style={{ height: `${percent}%` }}
-                        ></div>
-                        <span className="text-[10px] text-dark-muted mt-1">Day {idx + 1}</span>
+                return (
+                  <>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      
+                      {/* Sliders and Splits Console (Col 1 & 2) */}
+                      <div className="lg:col-span-2 bg-dark-card border border-dark-border p-6 rounded-2xl space-y-6">
+                        <div>
+                          <h3 className="font-cyber font-bold text-white text-base">Venture Capital & Creator Yield Modeling Engine</h3>
+                          <p className="text-xs text-dark-muted mt-1">
+                            Simulate direct monetization models. Compare the flat 5% fee model of Omnisphere R18 against legacy tech monopolies.
+                          </p>
+                        </div>
+
+                        {/* Sliders */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs font-semibold">
+                              <span className="text-dark-muted">SUBSCRIBERS</span>
+                              <span className="font-mono text-white font-bold">{subCount.toLocaleString()}</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="10000"
+                              step="100"
+                              value={subCount}
+                              onChange={e => setSubCount(parseInt(e.target.value))}
+                              className="w-full accent-brand-primary h-1 bg-zinc-800 rounded-lg cursor-pointer"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs font-semibold">
+                              <span className="text-dark-muted">SUB PRICE</span>
+                              <span className="font-mono text-white font-bold">${subPrice.toFixed(2)}</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="1"
+                              max="100"
+                              step="0.5"
+                              value={subPrice}
+                              onChange={e => setSubPrice(parseFloat(e.target.value))}
+                              className="w-full accent-brand-secondary h-1 bg-zinc-800 rounded-lg cursor-pointer"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs font-semibold">
+                              <span className="text-dark-muted">ESTIMATED TIPS / MO</span>
+                              <span className="font-mono text-white font-bold">${monthlyTips.toLocaleString()}</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="10000"
+                              step="50"
+                              value={monthlyTips}
+                              onChange={e => setMonthlyTips(parseInt(e.target.value))}
+                              className="w-full accent-brand-accent h-1 bg-zinc-800 rounded-lg cursor-pointer"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Yield Comparison Card */}
+                        <div className="p-4 rounded-xl bg-zinc-950 border border-dark-border grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                          <div>
+                            <span className="text-[10px] text-dark-muted uppercase font-bold">Gross Monthly Flow</span>
+                            <h4 className="text-lg font-mono font-black text-white mt-1">${grossMonthly.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-brand-primary uppercase font-bold">Omnisphere Net (95%)</span>
+                            <h4 className="text-lg font-mono font-black text-brand-primary mt-1">${omniNet.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-dark-muted uppercase font-bold">Legacy Net (60%)</span>
+                            <h4 className="text-lg font-mono font-black text-zinc-400 mt-1">${legacyNet.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
+                          </div>
+                          <div className="bg-brand-accent/5 border border-brand-accent/20 rounded-lg p-2 flex flex-col justify-center">
+                            <span className="text-[9px] text-brand-accent uppercase font-bold tracking-wider">Creator saved yield</span>
+                            <h4 className="text-base font-mono font-black text-brand-accent mt-0.5">+${savedBonus.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mo</h4>
+                          </div>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
+
+                      {/* SVG Graph Panel (Col 3) */}
+                      <div className="bg-dark-card border border-dark-border p-6 rounded-2xl flex flex-col justify-between">
+                        <div>
+                          <h4 className="font-cyber font-bold text-white text-sm">Monthly Earnings Curve</h4>
+                          <p className="text-[10px] text-dark-muted mt-0.5">Fuchsia: Omnisphere | Grey: Legacy platform splits</p>
+                        </div>
+
+                        <div className="relative w-full h-36 mt-4 bg-zinc-950/60 rounded-xl border border-dark-border/40 overflow-hidden">
+                          <svg className="w-full h-full" viewBox="0 0 400 150">
+                            {/* Grid Lines */}
+                            <line x1="40" y1="15" x2="380" y2="15" stroke="#27272a" strokeWidth="0.5" strokeDasharray="3,3" />
+                            <line x1="40" y1="70" x2="380" y2="70" stroke="#27272a" strokeWidth="0.5" strokeDasharray="3,3" />
+                            <line x1="40" y1="125" x2="380" y2="125" stroke="#27272a" strokeWidth="0.5" strokeDasharray="3,3" />
+
+                            {/* Path lines */}
+                            <path d={legacyPath} fill="none" stroke="#52525b" strokeWidth="2.5" strokeLinecap="round" />
+                            <path d={omniPath} fill="none" stroke="var(--color-brand-primary)" strokeWidth="3" strokeLinecap="round" className="drop-shadow-[0_0_8px_rgba(255,0,127,0.4)]" />
+
+                            {/* Current pointer vertical line */}
+                            <line x1={currentX} y1="15" x2={currentX} y2="125" stroke="var(--color-brand-accent)" strokeWidth="1" strokeDasharray="2,2" />
+                            <circle cx={currentX} cy={140 - (((subCount * subPrice + monthlyTips) * 0.95) / maxRev) * 110 - 15} r="4.5" fill="var(--color-brand-accent)" />
+
+                            {/* Axis labels */}
+                            <text x="40" y="145" fill="#71717a" fontSize="8" fontFamily="monospace">0</text>
+                            <text x="200" y="145" fill="#71717a" fontSize="8" fontFamily="monospace" textAnchor="middle">5k subs</text>
+                            <text x="360" y="145" fill="#71717a" fontSize="8" fontFamily="monospace" textAnchor="end">10k subs</text>
+                            
+                            <text x="35" y="20" fill="#71717a" fontSize="8" fontFamily="monospace" textAnchor="end">Max</text>
+                            <text x="35" y="128" fill="#71717a" fontSize="8" fontFamily="monospace" textAnchor="end">Min</text>
+                          </svg>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-zinc-500 font-mono mt-3">
+                          <span>*Calculated based on 95% payout splits.</span>
+                          <span className="text-brand-accent font-bold">Active Node Sync: LIVE</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Platform Splits Economics & Investor Dashboard */}
+                    <div className="bg-dark-card border border-dark-border p-6 rounded-2xl">
+                      <h3 className="font-cyber font-bold text-white text-base mb-4">Decentralized Platform Economics vs Legacy Web2</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                        <div className="space-y-2 p-4 rounded-xl bg-zinc-950/40 border border-dark-border/60">
+                          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block">Creator Revenue Autonomy</span>
+                          <h5 className="font-bold text-white">95% Creator Share Payout</h5>
+                          <p className="text-xs text-dark-muted leading-relaxed">
+                            Instead of taking 30% to 50% cuts for database indexing and content distribution, Omnisphere R18 charges a flat 5% split. All storage hashes are routed directly.
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2 p-4 rounded-xl bg-zinc-950/40 border border-dark-border/60">
+                          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block">VC Valuation Metrics</span>
+                          <h5 className="font-bold text-white">Infinite Creator LTV/CAC Ratio</h5>
+                          <p className="text-xs text-dark-muted leading-relaxed">
+                            With zero-telemetry local caching, user data retention costs are virtually zero. This yields highly optimized EBITDA margins, allowing the platform to scale with negligible overhead.
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 p-4 rounded-xl bg-zinc-950/40 border border-dark-border/60">
+                          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider block">Zero Shadowbans Guarantee</span>
+                          <h5 className="font-bold text-white">Postgres RLS Isolation</h5>
+                          <p className="text-xs text-dark-muted leading-relaxed">
+                            Accounts cannot be shadowbanned or deleted by centralized algorithmic filters. Database Row Level Security rules protect and isolate all creator profiles.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* VC Cap Table & Growth Projections Simulator */}
+                    <div className="bg-dark-card border border-dark-border p-6 rounded-2xl space-y-6">
+                      <div>
+                        <h3 className="font-cyber font-bold text-white text-base">VC Cap Table & Investment Yield Simulator</h3>
+                        <p className="text-xs text-dark-muted mt-1">
+                          Simulate valuation models, investment sizing, and projected ROI under the Omnisphere R18 Social Core Engine.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Sliders */}
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs font-semibold">
+                              <span className="text-dark-muted">PRE-MONEY VALUATION</span>
+                              <span className="font-mono text-white font-bold">${(vcPreMoney / 1000000).toFixed(1)}M</span>
+                            </div>
+                            <input
+                              type="range"
+                              min={5000000}
+                              max={100000000}
+                              step={1000000}
+                              value={vcPreMoney}
+                              onChange={e => setVcPreMoney(parseInt(e.target.value))}
+                              className="w-full accent-brand-primary h-1 bg-zinc-800 rounded-lg cursor-pointer"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs font-semibold">
+                              <span className="text-dark-muted">INVESTMENT SIZE</span>
+                              <span className="font-mono text-white font-bold">${(vcInvestment / 1000000).toFixed(2)}M</span>
+                            </div>
+                            <input
+                              type="range"
+                              min={100000}
+                              max={10000000}
+                              step={100000}
+                              value={vcInvestment}
+                              onChange={e => setVcInvestment(parseInt(e.target.value))}
+                              className="w-full accent-brand-secondary h-1 bg-zinc-800 rounded-lg cursor-pointer"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-xs font-semibold">
+                              <span className="text-dark-muted">ANNUAL CREATOR GROWTH</span>
+                              <span className="font-mono text-white font-bold">+{vcGrowthRate}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min={50}
+                              max={500}
+                              step={10}
+                              value={vcGrowthRate}
+                              onChange={e => setVcGrowthRate(parseInt(e.target.value))}
+                              className="w-full accent-brand-accent h-1 bg-zinc-800 rounded-lg cursor-pointer"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Real-time ROI Projections Cards */}
+                        {(() => {
+                          const postMoney = vcPreMoney + vcInvestment;
+                          const equityShare = (vcInvestment / postMoney) * 100;
+                          const baseVol = 10000000;
+                          const platformFee = 0.05;
+                          const y1Rev = baseVol * platformFee;
+                          const y2Rev = y1Rev * (1 + vcGrowthRate / 100);
+                          const y3Rev = y2Rev * (1 + vcGrowthRate / 100);
+                          const total3YrRev = y1Rev + y2Rev + y3Rev;
+                          const vcShareOfRevenue = total3YrRev * (equityShare / 100);
+                          const roiMultiple = vcShareOfRevenue / vcInvestment;
+
+                          return (
+                            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="p-4 rounded-xl bg-zinc-950 border border-dark-border flex flex-col justify-between">
+                                <div>
+                                  <span className="text-[10px] text-dark-muted uppercase font-bold">Post-Money Valuation</span>
+                                  <h4 className="text-xl font-mono font-black text-white mt-1">
+                                    ${(postMoney / 1000000).toFixed(2)}M
+                                  </h4>
+                                </div>
+                                <p className="text-[10px] text-zinc-500 mt-2">
+                                  Pre-Money valuation plus new cash injected.
+                                </p>
+                              </div>
+
+                              <div className="p-4 rounded-xl bg-zinc-950 border border-dark-border flex flex-col justify-between">
+                                <div>
+                                  <span className="text-[10px] text-brand-primary uppercase font-bold">Equity Share Ownership</span>
+                                  <h4 className="text-xl font-mono font-black text-brand-primary mt-1">
+                                    {equityShare.toFixed(2)}%
+                                  </h4>
+                                </div>
+                                <p className="text-[10px] text-zinc-500 mt-2">
+                                  Calculated dilution based on investment size.
+                                </p>
+                              </div>
+
+                              <div className="p-4 rounded-xl bg-zinc-950 border border-dark-border flex flex-col justify-between">
+                                <div>
+                                  <span className="text-[10px] text-brand-accent uppercase font-bold">Projected 3-Yr Cumulative Fees</span>
+                                  <h4 className="text-xl font-mono font-black text-brand-accent mt-1">
+                                    ${(total3YrRev / 1000000).toFixed(2)}M
+                                  </h4>
+                                </div>
+                                <p className="text-[10px] text-zinc-500 mt-2">
+                                  Total 5% platform fees collected over 3 years.
+                                </p>
+                              </div>
+
+                              <div className="p-4 rounded-xl bg-zinc-950 border border-brand-matrix/20 flex flex-col justify-between shadow-[0_0_15px_rgba(0,255,100,0.05)]">
+                                <div>
+                                  <span className="text-[10px] text-brand-matrix uppercase font-bold">VC Share & Projected ROI</span>
+                                  <h4 className="text-xl font-mono font-black text-brand-matrix mt-1">
+                                    ${(vcShareOfRevenue / 1000000).toFixed(2)}M ({roiMultiple.toFixed(2)}x)
+                                  </h4>
+                                </div>
+                                <p className="text-[10px] text-zinc-500 mt-2">
+                                  Projected returns from 5% flat fee cashflow splits.
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 
@@ -1970,7 +3133,7 @@ export default function App() {
                         if (!isNaN(amt) && amt > 0) {
                           handleUpdateWallet(amt);
                           const newTx: Transaction = {
-                            id: `tx-dep-${Date.now()}`,
+                            id: generateUniqueId("tx-dep"),
                             sender_id: null,
                             receiver_id: "currentUser",
                             amount: amt,
@@ -2009,7 +3172,7 @@ export default function App() {
                           }
                           handleUpdateWallet(-amt);
                           const newTx: Transaction = {
-                            id: `tx-wth-${Date.now()}`,
+                            id: generateUniqueId("tx-wth"),
                             sender_id: "currentUser",
                             receiver_id: null,
                             amount: amt,
@@ -2391,6 +3554,71 @@ export default function App() {
                     )}
                   </div>
 
+                  {/* Action 4: Omnishield Anti-Scraping Console */}
+                  <div className="bg-dark-card border border-brand-accent/20 p-5 rounded-2xl space-y-4 shadow-[0_0_15px_rgba(0,240,255,0.02)]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-white font-bold text-sm">
+                        <ShieldAlert className="w-4 h-4 text-brand-accent animate-pulse" />
+                        <h4>Omnishield Security HUD</h4>
+                      </div>
+                      <span className="font-mono text-[9px] text-brand-accent uppercase tracking-wider font-bold">
+                        {shieldActive ? "Shields Active" : "Shields Offline"}
+                      </span>
+                    </div>
+
+                    {/* Toggles */}
+                    <div className="space-y-2.5 pt-2 border-t border-dark-border/40">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-zinc-300 font-semibold">Zero-Telemetry Sandbox</span>
+                        <input
+                          type="checkbox"
+                          checked={zeroTelemetry}
+                          onChange={e => setZeroTelemetry(e.target.checked)}
+                          className="rounded border-dark-border bg-dark-bg text-brand-accent focus:ring-brand-accent cursor-pointer"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-zinc-300 font-semibold">Anti-Scrape Crawler Shield</span>
+                        <input
+                          type="checkbox"
+                          checked={antiScrape}
+                          onChange={e => setAntiScrape(e.target.checked)}
+                          className="rounded border-dark-border bg-dark-bg text-brand-accent focus:ring-brand-accent cursor-pointer"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-zinc-300 font-semibold">P2P Channel Encryption</span>
+                        <input
+                          type="checkbox"
+                          checked={p2pChatEncrypt}
+                          onChange={e => setP2pChatEncrypt(e.target.checked)}
+                          className="rounded border-dark-border bg-dark-bg text-brand-accent focus:ring-brand-accent cursor-pointer"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-zinc-300 font-semibold">Decentralized Routing</span>
+                        <input
+                          type="checkbox"
+                          checked={shieldActive}
+                          onChange={e => setShieldActive(e.target.checked)}
+                          className="rounded border-dark-border bg-dark-bg text-brand-accent focus:ring-brand-accent cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Live Crawler Monitor Log */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] text-dark-muted uppercase font-bold tracking-wider block">Intrusion Logs</span>
+                      <div className="p-3 rounded-lg bg-black border border-dark-border/80 font-mono text-[9px] text-zinc-400 h-28 overflow-y-auto space-y-1.5 scrollbar-thin">
+                        {shieldLogs.map((log, idx) => (
+                          <div key={idx} className={log.includes("[BLOCKED]") ? "text-brand-accent" : ""}>
+                            {log}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
 
               </div>
@@ -2398,7 +3626,8 @@ export default function App() {
           )}
 
         </div>
-      </main>
+      </div>
+    </main>
 
       {/* Tip Creator Modal */}
       {tipModalOpen && (
@@ -2563,7 +3792,7 @@ export default function App() {
 
                 <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200 font-mono text-[10px] text-zinc-600 flex justify-between">
                   <span>TRANSACTION ID:</span>
-                  <span>PP-TX-{Math.floor(100000+Math.random()*900000)}</span>
+                  <span>{approvedPaypalTxId}</span>
                 </div>
 
                 <button
@@ -2574,6 +3803,46 @@ export default function App() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* PWA Install Promo Banner */}
+      {showInstallBanner && (
+        <div className="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-96 z-50 glass-panel-fuchsia p-5 rounded-2xl border border-brand-primary/40 shadow-[0_0_30px_rgba(255,0,127,0.35)] animate-fade-in flex flex-col gap-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-primary/10 border border-brand-primary/30 flex items-center justify-center text-brand-primary">
+                <span className="text-lg font-cyber font-black">Ω</span>
+              </div>
+              <div className="text-left">
+                <h4 className="font-cyber font-bold text-white text-xs uppercase tracking-wider">Install Omnisphere Core</h4>
+                <p className="text-[10px] text-dark-muted mt-0.5">Bypass app stores. Install zero-telemetry PWA.</p>
+              </div>
+            </div>
+            <button
+              onClick={dismissInstallBanner}
+              className="text-zinc-500 hover:text-zinc-300 text-sm font-bold cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="text-[10px] text-zinc-400 leading-relaxed font-mono text-left">
+            Get offline node caching, full-screen biometric logins, and secure local database sandboxing directly on your device.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleInstallPWA}
+              className="flex-1 py-2 rounded-xl bg-white text-black font-bold text-xs font-cyber tracking-wider hover:bg-zinc-200 transition-all cursor-pointer text-center"
+            >
+              ADD TO HOME SCREEN
+            </button>
+            <button
+              onClick={dismissInstallBanner}
+              className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white text-xs cursor-pointer font-mono"
+            >
+              Later
+            </button>
           </div>
         </div>
       )}

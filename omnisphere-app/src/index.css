@@ -21,6 +21,8 @@
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-float: float 4s ease-in-out infinite;
   --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
+  --animate-marquee: marquee 25s linear infinite;
+  --animate-border-glow: border-glow 3s ease-in-out infinite;
 
   @keyframes scanline {
     0% {
@@ -49,6 +51,24 @@
     }
     50% {
       box-shadow: 0 0 30px var(--color-glow-pink), 0 0 10px var(--color-brand-secondary);
+    }
+  }
+  @keyframes marquee {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes border-glow {
+    0%, 100% {
+      border-color: var(--color-dark-border);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0);
+    }
+    50% {
+      border-color: rgba(255, 0, 127, 0.4);
+      box-shadow: 0 0 15px rgba(255, 0, 127, 0.15);
     }
   }
 }
