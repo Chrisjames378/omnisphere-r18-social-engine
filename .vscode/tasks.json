@@ -1,0 +1,37 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "build",
+      "path": "omnisphere-app",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "label": "Build Omnisphere PWA App",
+      "detail": "Compile TypeScript and bundle Vite assets for the main app"
+    },
+    {
+      "type": "npm",
+      "script": "build",
+      "path": "omnisphere-waitlist",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "Build Omnisphere Waitlist Portal",
+      "detail": "Compile TypeScript and bundle Vite assets for waitlist"
+    },
+    {
+      "type": "shell",
+      "command": "npx tsc --noEmit",
+      "options": {
+        "cwd": "${workspaceFolder}/omnisphere-mobile"
+      },
+      "group": "build",
+      "problemMatcher": [],
+      "label": "Typecheck Mobile App",
+      "detail": "Run TypeScript type checker on Expo mobile app"
+    }
+  ]
+}
